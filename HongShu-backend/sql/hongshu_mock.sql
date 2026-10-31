@@ -501,3 +501,242 @@ CREATE TABLE `web_login_log` (
 
 -- web_navbar
 DROP TABLE IF EXISTS `web_navbar`;
+CREATE TABLE `web_navbar` (
+  `id` int NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `title` varchar(50) DEFAULT NULL COMMENT '分类标题',
+  `pid` int DEFAULT NULL COMMENT '分类父id',
+  `sort` int DEFAULT '0' COMMENT '分类排序',
+  `like_count` bigint DEFAULT '0' COMMENT '喜欢数量',
+  `description` longtext COMMENT '分类描述',
+  `normal_cover` varchar(512) DEFAULT NULL COMMENT '分类的封面，如果是一级分类就是随便看看的封面，二级分类则是主封面',
+  `hot_cover` varchar(255) DEFAULT NULL COMMENT '热门封面',
+  `status` int DEFAULT NULL COMMENT '状态',
+  `creator` varchar(50) DEFAULT NULL COMMENT '创建用户',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `updater` varchar(50) DEFAULT NULL COMMENT '修改用户',
+  `update_time` datetime DEFAULT NULL COMMENT '修改时间',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='分类表\n';
+
+-- web_note
+DROP TABLE IF EXISTS `web_note`;
+CREATE TABLE `web_note` (
+  `id` int NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `title` varchar(50) DEFAULT NULL COMMENT '笔记标题',
+  `content` longtext COMMENT '笔记内容',
+  `note_cover` varchar(512) DEFAULT NULL COMMENT '笔记封面',
+  `note_cover_height` int DEFAULT NULL COMMENT '笔记高度',
+  `album_id` varchar(255) DEFAULT NULL COMMENT '专辑ID',
+  `uid` varchar(50) DEFAULT NULL COMMENT '用户id',
+  `author` varchar(50) DEFAULT NULL COMMENT '作者',
+  `cid` varchar(50) DEFAULT NULL COMMENT '笔记所属二级分类id',
+  `cpid` varchar(50) DEFAULT NULL COMMENT '笔记所属一级分类id',
+  `urls` longtext COMMENT '笔记urls',
+  `count` int DEFAULT NULL COMMENT '图片数量',
+  `sort` int DEFAULT NULL COMMENT '笔记排序',
+  `pinned` int DEFAULT '0' COMMENT '是否置顶',
+  `status` tinyint DEFAULT '1' COMMENT '笔记状态',
+  `audit_status` int DEFAULT NULL COMMENT '审核状态',
+  `note_type` int DEFAULT '0' COMMENT '笔记类型（0/1：图文，2：视频）',
+  `view_count` bigint DEFAULT '0' COMMENT '笔记浏览次数',
+  `like_count` bigint DEFAULT '0' COMMENT '笔记点赞次数',
+  `collection_count` bigint DEFAULT '0' COMMENT '笔记收藏次数',
+  `comment_count` bigint DEFAULT '0' COMMENT '笔记评论次数',
+  `time` varchar(15) DEFAULT NULL COMMENT '时间戳',
+  `creator` varchar(50) DEFAULT NULL COMMENT '创建用户',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `updater` varchar(50) DEFAULT NULL COMMENT '修改用户',
+  `update_time` datetime DEFAULT NULL COMMENT '修改时间',
+  PRIMARY KEY (`id`),
+  KEY `update_date_index` (`update_time`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='笔记';
+
+-- web_oper_log
+DROP TABLE IF EXISTS `web_oper_log`;
+CREATE TABLE `web_oper_log` (
+  `id` varchar(50) NOT NULL COMMENT '日志主键',
+  `title` varchar(50) DEFAULT '' COMMENT '模块标题',
+  `business_type` int DEFAULT '0' COMMENT '业务类型（0其它 1新增 2修改 3删除）',
+  `method` varchar(100) DEFAULT '' COMMENT '方法名称',
+  `request_method` varchar(10) DEFAULT '' COMMENT '请求方式',
+  `operator_type` int DEFAULT '0' COMMENT '操作类别（0其它 1后台用户 2手机端用户）',
+  `oper_name` varchar(50) DEFAULT '' COMMENT '操作人员',
+  `oper_url` varchar(255) DEFAULT '' COMMENT '请求URL',
+  `oper_ip` varchar(128) DEFAULT '' COMMENT '主机地址',
+  `oper_location` varchar(255) DEFAULT '' COMMENT '操作地点',
+  `oper_param` varchar(2000) DEFAULT '' COMMENT '请求参数',
+  `json_result` varchar(2000) DEFAULT '' COMMENT '返回参数',
+  `status` int DEFAULT '0' COMMENT '操作状态（0正常 1异常）',
+  `error_msg` varchar(2000) DEFAULT '' COMMENT '错误消息',
+  `oper_time` datetime DEFAULT NULL COMMENT '操作时间',
+  `cost_time` bigint DEFAULT '0' COMMENT '消耗时间',
+  `oper_uid` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '操作的用户id',
+  PRIMARY KEY (`id`),
+  KEY `idx_sys_oper_log_bt` (`business_type`),
+  KEY `idx_sys_oper_log_s` (`status`),
+  KEY `idx_sys_oper_log_ot` (`oper_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='用户操作';
+
+-- web_picture
+DROP TABLE IF EXISTS `web_picture`;
+CREATE TABLE `web_picture` (
+  `uid` varchar(32) NOT NULL COMMENT '唯一uid',
+  `file_uid` varchar(32) DEFAULT NULL COMMENT '图片uid',
+  `pic_name` varchar(255) DEFAULT NULL COMMENT '图片名',
+  `picture_sort_uid` varchar(32) DEFAULT NULL COMMENT '分类uid',
+  `status` tinyint unsigned NOT NULL DEFAULT '1' COMMENT '状态',
+  `create_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`uid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COMMENT='图片表';
+
+-- web_picture_sort
+DROP TABLE IF EXISTS `web_picture_sort`;
+CREATE TABLE `web_picture_sort` (
+  `uid` varchar(32) NOT NULL COMMENT '唯一uid',
+  `file_uid` varchar(32) DEFAULT NULL COMMENT '分类图片uid',
+  `name` varchar(255) DEFAULT NULL COMMENT '分类名',
+  `status` tinyint unsigned NOT NULL DEFAULT '1' COMMENT '状态',
+  `create_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `parent_uid` varchar(32) DEFAULT NULL,
+  `sort` int DEFAULT '0' COMMENT '排序字段，越大越靠前',
+  `is_show` tinyint(1) NOT NULL DEFAULT '1' COMMENT '是否显示，1：是，0，否',
+  PRIMARY KEY (`uid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COMMENT='图片分类表';
+
+-- web_tag
+DROP TABLE IF EXISTS `web_tag`;
+CREATE TABLE `web_tag` (
+  `id` int NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `title` varchar(50) DEFAULT NULL COMMENT '标签标题',
+  `like_count` bigint DEFAULT NULL COMMENT '标签使用次数',
+  `sort` int DEFAULT NULL COMMENT '排序',
+  `creator` varchar(50) DEFAULT NULL COMMENT '创建用户',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `updater` varchar(50) DEFAULT NULL COMMENT '修改用户',
+  `update_time` datetime DEFAULT NULL COMMENT '修改时间',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='标签';
+
+-- web_tag_note_relation
+DROP TABLE IF EXISTS `web_tag_note_relation`;
+CREATE TABLE `web_tag_note_relation` (
+  `id` int NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `nid` varchar(50) DEFAULT NULL COMMENT '笔记id',
+  `tid` varchar(50) DEFAULT NULL COMMENT '标签id',
+  `creator` varchar(50) DEFAULT NULL COMMENT '创建用户',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `updater` varchar(50) DEFAULT NULL COMMENT '修改用户',
+  `update_time` datetime DEFAULT NULL COMMENT '修改时间',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='标签笔记';
+
+-- web_user
+DROP TABLE IF EXISTS `web_user`;
+CREATE TABLE `web_user` (
+  `id` int NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `hs_id` bigint DEFAULT NULL COMMENT '红薯ID',
+  `username` varchar(50) NOT NULL COMMENT '用户名',
+  `password` varchar(100) DEFAULT NULL COMMENT '密码',
+  `avatar` varchar(512) DEFAULT NULL COMMENT '头像',
+  `gender` tinyint DEFAULT '0' COMMENT '性别',
+  `phone` varchar(50) DEFAULT NULL COMMENT '手机号',
+  `email` varchar(100) DEFAULT NULL COMMENT 'email',
+  `tags` varchar(255) DEFAULT NULL COMMENT '用户标签',
+  `description` longtext COMMENT '描述',
+  `status` tinyint DEFAULT '0' COMMENT '用户状态',
+  `birthday` varchar(50) DEFAULT NULL COMMENT '生日',
+  `address` varchar(50) DEFAULT NULL COMMENT '地址',
+  `trend_count` bigint DEFAULT '0' COMMENT '笔记数量',
+  `follower_count` bigint DEFAULT '0' COMMENT '关注数量',
+  `fan_count` bigint DEFAULT '0' COMMENT '粉丝数量',
+  `creator` varchar(50) DEFAULT NULL COMMENT '创建用户',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updater` varchar(50) DEFAULT NULL COMMENT '修改用户',
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
+  `login_ip` varchar(128) DEFAULT '' COMMENT '最后登录IP',
+  `login_date` datetime DEFAULT NULL COMMENT '最后登录时间',
+  `is_online` tinyint DEFAULT '0' COMMENT '是否在线',
+  `remark` varchar(255) DEFAULT NULL COMMENT '备注',
+  `deleted` int DEFAULT '0',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='用户';
+
+-- web_user_note_relation
+DROP TABLE IF EXISTS `web_user_note_relation`;
+CREATE TABLE `web_user_note_relation` (
+  `id` int NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `nid` varchar(50) DEFAULT NULL COMMENT '笔记id',
+  `uid` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '用户id',
+  `creator` varchar(50) DEFAULT NULL COMMENT '创建用户',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `updater` varchar(50) DEFAULT NULL COMMENT '修改用户',
+  `update_time` datetime DEFAULT NULL COMMENT '修改时间',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='用户-笔记关系表\n';
+
+-- web_visit
+DROP TABLE IF EXISTS `web_visit`;
+CREATE TABLE `web_visit` (
+  `id` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '主键',
+  `user_uid` varchar(255) DEFAULT NULL COMMENT '用户uid',
+  `ip` varchar(255) DEFAULT NULL COMMENT '访问ip地址',
+  `behavior` varchar(255) DEFAULT NULL COMMENT '用户行为',
+  `module_uid` varchar(255) DEFAULT NULL COMMENT '模块uid（文章uid，标签uid，分类uid）',
+  `other_data` varchar(255) DEFAULT NULL COMMENT '附加数据(比如搜索内容)',
+  `status` tinyint(1) NOT NULL DEFAULT '1' COMMENT '状态',
+  `create_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `os` varchar(255) DEFAULT NULL COMMENT '操作系统',
+  `browser` varchar(255) DEFAULT NULL COMMENT '浏览器',
+  `ip_source` varchar(255) DEFAULT NULL COMMENT 'ip来源',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COMMENT='Web访问记录表';
+
+-- web_search_record
+DROP TABLE IF EXISTS `web_search_record`;
+CREATE TABLE `web_search_record` (
+  `id` varchar(32) NOT NULL COMMENT '服务端生成的无连字符 UUID',
+  `uid` varchar(50) DEFAULT NULL COMMENT '用户 ID；匿名记录为空',
+  `content` varchar(255) NOT NULL COMMENT '搜索关键词',
+  `search_count` bigint NOT NULL DEFAULT 0 COMMENT '搜索次数',
+  `creator` varchar(50) DEFAULT NULL COMMENT '创建用户',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `updater` varchar(50) DEFAULT NULL COMMENT '修改用户',
+  `update_time` datetime DEFAULT NULL COMMENT '修改时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_search_record_user_content` (`uid`, `content`),
+  KEY `idx_search_record_user_updated` (`uid`, `update_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='MySQL 搜索历史与热搜统计';
+
+-- t_system_config
+DROP TABLE IF EXISTS `t_system_config`;
+CREATE TABLE `t_system_config` (
+  `uid` varchar(32) NOT NULL COMMENT '配置唯一标识',
+  `status` int NOT NULL DEFAULT 1 COMMENT '状态：0失效，1生效',
+  `create_time` datetime DEFAULT NULL,
+  `update_time` datetime DEFAULT NULL,
+  `email` varchar(255) DEFAULT NULL,
+  `email_user_name` varchar(255) DEFAULT NULL,
+  `email_password` varchar(255) DEFAULT NULL,
+  `smtp_address` varchar(255) DEFAULT NULL,
+  `smtp_port` varchar(16) DEFAULT NULL,
+  `start_email_notification` varchar(1) NOT NULL DEFAULT '0',
+  `editor_model` varchar(1) NOT NULL DEFAULT '0',
+  `theme_color` varchar(32) DEFAULT NULL,
+  `dashboard_notification` text,
+  `open_dashboard_notification` varchar(1) NOT NULL DEFAULT '0',
+  `open_email_activate` varchar(1) NOT NULL DEFAULT '0',
+  `search_model` varchar(1) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`uid`),
+  KEY `idx_system_config_status_created` (`status`, `create_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='本地演示系统配置';
+CREATE TABLE web_upload (
+  path VARCHAR(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  uid VARCHAR(50) NOT NULL,
+  storage_type INT NOT NULL DEFAULT 0 COMMENT '0：历史本地文件，3：阿里云OSS',
+  create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (path),
+  KEY idx_web_upload_uid (uid)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
