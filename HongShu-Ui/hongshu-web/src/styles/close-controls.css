@@ -1,0 +1,114 @@
+/* 统一所有关闭/清除叉号；全局样式同时覆盖传送到 body 的弹窗。 */
+:root {
+  --close-control-shadow: 0 2px 10px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.06);
+  --close-control-hover-shadow: 0 3px 12px rgba(0, 0, 0, 0.18);
+}
+
+html.dark-mode {
+  --close-control-shadow: 0 2px 10px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.25);
+  --close-control-hover-shadow: 0 3px 12px rgba(0, 0, 0, 0.55);
+}
+
+:is(
+  .round-close,
+  .el-dialog__headerbtn,
+  .el-message-box__headerbtn,
+  .el-drawer__close-btn,
+  .el-image-viewer__close,
+  .el-message__closeBtn,
+  .el-notification__closeBtn,
+  .el-input__clear,
+  .el-cascader .icon-circle-close,
+  .el-select__clear,
+  .el-select__caret.is-show-close,
+  .el-tag__close
+) {
+  /* 视觉属性统一覆盖组件内部的 scoped 样式，保留各控件原有定位。 */
+  display: inline-flex;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  padding: 0 !important;
+  border: 1px solid var(--el-border-color-light) !important;
+  border-radius: 50% !important;
+  background: var(--el-bg-color-overlay) !important;
+  color: var(--el-text-color-regular) !important;
+  box-shadow: var(--close-control-shadow) !important;
+  cursor: pointer;
+  transition: background-color 0.2s, box-shadow 0.2s;
+
+}
+
+:is(.round-close, .el-dialog__headerbtn, .el-message-box__headerbtn,
+  .el-drawer__close-btn, .el-image-viewer__close, .el-message__closeBtn,
+  .el-notification__closeBtn, .el-input__clear, .el-cascader .icon-circle-close,
+  .el-select__clear, .el-select__caret.is-show-close, .el-tag__close):hover {
+  background: var(--el-fill-color-light) !important;
+  box-shadow: var(--close-control-hover-shadow) !important;
+}
+
+:is(.round-close, .el-dialog__headerbtn, .el-message-box__headerbtn,
+  .el-drawer__close-btn, .el-image-viewer__close, .el-message__closeBtn,
+  .el-notification__closeBtn, .el-input__clear, .el-cascader .icon-circle-close,
+  .el-select__clear, .el-select__caret.is-show-close, .el-tag__close):focus-visible {
+  outline: 2px solid var(--el-color-primary);
+  outline-offset: 3px;
+}
+
+:is(.round-close, .el-dialog__headerbtn, .el-message-box__headerbtn,
+  .el-drawer__close-btn, .el-image-viewer__close, .el-message__closeBtn,
+  .el-notification__closeBtn, .el-input__clear, .el-cascader .icon-circle-close,
+  .el-select__clear, .el-select__caret.is-show-close, .el-tag__close) > :is(.el-icon, svg) {
+  color: inherit !important;
+}
+
+.round-close {
+  width: var(--close-control-size, 36px) !important;
+  height: var(--close-control-size, 36px) !important;
+}
+
+.close-cricle .round-close { --close-control-size: 40px; }
+.image-remove-button.round-close { --close-control-size: 22px; }
+.close-tag.round-close { --close-control-size: 18px; }
+.input-buttons.round-close { --close-control-size: 24px; }
+.close-icon.round-close {
+  --close-control-size: 26px;
+  margin-right: 14px;
+}
+
+.el-dialog__headerbtn,
+.el-message-box__headerbtn,
+.el-drawer__close-btn {
+  width: 36px;
+  height: 36px;
+  font-size: 18px;
+}
+
+.el-dialog__headerbtn,
+.el-message-box__headerbtn {
+  top: 12px;
+  right: 12px;
+}
+
+.el-dialog__headerbtn .el-dialog__close,
+.el-message-box__headerbtn .el-message-box__close {
+  color: inherit;
+}
+
+.el-message__closeBtn,
+.el-notification__closeBtn {
+  width: 22px;
+  height: 22px;
+  font-size: 14px;
+}
+
+.el-input__clear,
+.el-cascader .icon-circle-close,
+.el-select__clear,
+.el-select__caret.is-show-close,
+.el-tag__close {
+  width: 16px;
+  height: 16px;
+  font-size: 12px;
+}

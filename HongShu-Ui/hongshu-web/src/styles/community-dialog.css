@@ -1,0 +1,130 @@
+.community-dialog.el-dialog {
+  --community-dialog-scale: 64;
+  width: calc(var(--community-dialog-scale) * 1vw);
+  height: calc(var(--community-dialog-scale) * 1vh);
+  margin: auto;
+  padding: 28px;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+@supports (height: 1dvh) {
+  .community-dialog.el-dialog {
+    height: calc(var(--community-dialog-scale) * 1dvh);
+  }
+}
+
+.community-dialog.el-dialog .el-dialog__header {
+  padding-right: 48px;
+  padding-bottom: 24px;
+}
+
+.community-dialog.el-dialog .el-dialog__body {
+  flex: 1;
+  min-height: 0;
+  padding: 0;
+  overflow: auto;
+}
+
+.community-dialog.el-dialog .el-dialog__footer {
+  padding-top: 24px;
+}
+
+.community-dialog.el-dialog .el-dialog__footer .el-button {
+  min-width: 100px;
+}
+
+.community-dialog.el-dialog .el-dialog__headerbtn {
+  top: 20px;
+  right: 20px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--el-border-color-light);
+  border-radius: 50%;
+  background: var(--el-bg-color-overlay);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.06);
+  transition: background-color 0.2s, box-shadow 0.2s;
+}
+
+.community-dialog.el-dialog .el-dialog__headerbtn:hover {
+  background: var(--el-fill-color-light);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.16);
+}
+
+.community-dialog.el-dialog .el-dialog__headerbtn:focus-visible {
+  outline: 2px solid var(--el-color-primary);
+  outline-offset: 3px;
+}
+
+.community-dialog.el-dialog .el-dialog__close {
+  color: var(--el-text-color-regular);
+  font-size: 18px;
+}
+
+.community-dialog.profile-edit-dialog.el-dialog {
+  width: min(960px, calc(100vw - 40px));
+  height: min(840px, calc(100vh - 40px));
+  height: min(840px, calc(100dvh - 40px));
+  max-height: calc(100vh - 40px);
+  max-height: calc(100dvh - 40px);
+  padding: 24px;
+}
+
+.community-dialog.profile-edit-dialog.el-dialog .el-dialog__header {
+  padding-bottom: 18px;
+}
+
+.community-dialog.profile-edit-dialog.el-dialog .el-dialog__title {
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 600;
+}
+
+.community-dialog.profile-edit-dialog.el-dialog .el-dialog__body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.community-dialog.profile-edit-dialog.el-dialog .el-dialog__footer {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--el-border-color-extra-light);
+}
+
+@media (max-width: 640px), (max-height: 560px) {
+  .community-dialog.el-dialog {
+    --community-dialog-scale: 92;
+    padding: 20px;
+    border-radius: 16px;
+  }
+
+  .community-dialog.el-dialog .el-dialog__header {
+    padding-bottom: 16px;
+  }
+
+  .community-dialog.el-dialog .el-dialog__footer {
+    padding-top: 16px;
+  }
+
+  .community-dialog.el-dialog .el-dialog__headerbtn {
+    top: 12px;
+    right: 12px;
+  }
+
+  .community-dialog.profile-edit-dialog.el-dialog {
+    width: calc(100vw - 24px);
+    height: min(840px, calc(100vh - 24px));
+    height: min(840px, calc(100dvh - 24px));
+    max-height: calc(100vh - 24px);
+    max-height: calc(100dvh - 24px);
+    padding: 18px;
+  }
+}
