@@ -830,4 +830,352 @@ public class ExcelUtil<T> {
         }
         return Workbook.PICTURE_TYPE_JPEG;
     }
+
+    /**
+     * 创建表格样式
+     */
+    public void setDataValidation(Excel attr, Row row, int column) {
+        if (attr.name().contains("注：")) {
+            sheet.setColumnWidth(column, 6000);
+        } else {
+            // 设置列宽
+            sheet.setColumnWidth(column, (int) ((attr.width() + 0.72) * 256));
+        }
+        if (StringUtils.isNotEmpty(attr.prompt()) || attr.combo().length > 0) {
+            if (attr.combo().length > 15 || StringUtils.join(attr.combo()).length() > 255) {
+                // 如果下拉数大于15或字符串长度大于255，则使用一个新sheet存储，避免生成的模板下拉值获取不到
+                setXSSFValidationWithHidden(sheet, attr.combo(), attr.prompt(), 1, 100, column, column);
+            } else {
+                // 提示信息或只能选择不能输入的列内容.
+                setPromptOrValidation(sheet, attr.combo(), attr.prompt(), 1, 100, column, column);
+            }
+        }
+    }
+
+    /**
+     * 添加单元格
+     */
+    public Cell addCell(Excel attr, Row row, T vo, Field field, int column) {
+        Cell cell = null;
+        try {
+            // 设置行高
+            row.setHeight(maxHeight);
+            // 根据Excel中设置情况决定是否导出,有些情况需要保持为空,希望用户填写这一列.
+            if (attr.isExport()) {
+                // 创建cell
+                cell = row.createCell(column);
+                if (isSubListValue(vo) && getListCellValue(vo).size() > 1 && attr.needMerge()) {
+                    CellRangeAddress cellAddress = new CellRangeAddress(subMergedFirstRowNum, subMergedLastRowNum, column, column);
+                    sheet.addMergedRegion(cellAddress);
+                }
+                cell.setCellStyle(styles.get(StringUtils.format("data_{}_{}_{}_{}", attr.align(), attr.color(), attr.backgroundColor(), attr.cellType())));
+
+                // 用于读取对象中的属性
+                Object value = getTargetValue(vo, field, attr);
+                String dateFormat = attr.dateFormat();
+                String readConverterExp = attr.readConverterExp();
+                String separator = attr.separator();
+                String dictType = attr.dictType();
+                if (StringUtils.isNotEmpty(dateFormat) && StringUtils.isNotNull(value)) {
+                    cell.setCellValue(parseDateToStr(dateFormat, value));
+                } else if (StringUtils.isNotEmpty(readConverterExp) && StringUtils.isNotNull(value)) {
+                    cell.setCellValue(convertByExp(Convert.toStr(value), readConverterExp, separator));
+                } else if (StringUtils.isNotEmpty(dictType) && StringUtils.isNotNull(value)) {
+                    if (!sysDictMap.containsKey(dictType + value)) {
+                        String lable = convertDictByExp(Convert.toStr(value), dictType, separator);
+                        sysDictMap.put(dictType + value, lable);
+                    }
+                    cell.setCellValue(sysDictMap.get(dictType + value));
+                } else if (value instanceof BigDecimal && -1 != attr.scale()) {
+                    cell.setCellValue((((BigDecimal) value).setScale(attr.scale(), attr.roundingMode())).doubleValue());
+                } else if (!attr.handler().equals(ExcelHandlerAdapter.class)) {
+                    cell.setCellValue(dataFormatHandlerAdapter(value, attr, cell));
+                } else {
+                    // 设置列类型
+                    setCellVo(value, attr, cell);
+                }
+                addStatisticsData(column, Convert.toStr(value), attr);
+            }
+        } catch (Exception e) {
+            log.error("导出Excel失败", e);
+        }
+        return cell;
+    }
+
+    /**
+     * 设置 POI XSSFSheet 单元格提示或选择框
+     *
+     * @param sheet         表单
+     * @param textlist      下拉框显示的内容
+     * @param promptContent 提示内容
+     * @param firstRow      开始行
+     * @param endRow        结束行
+     * @param firstCol      开始列
+     * @param endCol        结束列
+     */
+    public void setPromptOrValidation(Sheet sheet, String[] textlist, String promptContent, int firstRow, int endRow,
+                                      int firstCol, int endCol) {
+        DataValidationHelper helper = sheet.getDataValidationHelper();
+        DataValidationConstraint constraint = textlist.length > 0 ? helper.createExplicitListConstraint(textlist) : helper.createCustomConstraint("DD1");
+        addValidation(sheet, helper, constraint, promptContent, firstRow, endRow, firstCol, endCol);
+    }
+
+    /**
+     * 设置某些列的值只能输入预制的数据,显示下拉框（兼容超出一定数量的下拉框）.
+     *
+     * @param sheet         要设置的sheet.
+     * @param textlist      下拉框显示的内容
+     * @param promptContent 提示内容
+     * @param firstRow      开始行
+     * @param endRow        结束行
+     * @param firstCol      开始列
+     * @param endCol        结束列
+     */
+    public void setXSSFValidationWithHidden(Sheet sheet, String[] textlist, String promptContent, int firstRow, int endRow, int firstCol, int endCol) {
+        String hideSheetName = "combo_" + firstCol + "_" + endCol;
+        Sheet hideSheet = wb.createSheet(hideSheetName); // 用于存储 下拉菜单数据
+        for (int i = 0; i < textlist.length; i++) {
+            hideSheet.createRow(i).createCell(0).setCellValue(textlist[i]);
+        }
+        // 创建名称，可被其他单元格引用
+        Name name = wb.createName();
+        name.setNameName(hideSheetName + "_data");
+        name.setRefersToFormula(hideSheetName + "!$A$1:$A$" + textlist.length);
+        DataValidationHelper helper = sheet.getDataValidationHelper();
+        // 加载下拉列表内容
+        DataValidationConstraint constraint = helper.createFormulaListConstraint(hideSheetName + "_data");
+        addValidation(sheet, helper, constraint, promptContent, firstRow, endRow, firstCol, endCol);
+        // 设置hiddenSheet隐藏
+        wb.setSheetHidden(wb.getSheetIndex(hideSheet), true);
+    }
+
+    private static void addValidation(Sheet sheet, DataValidationHelper helper, DataValidationConstraint constraint,
+                                      String promptContent, int firstRow, int endRow, int firstCol, int endCol) {
+        // 设置数据有效性加载在哪个单元格上,四个参数分别是：起始行、终止行、起始列、终止列
+        CellRangeAddressList regions = new CellRangeAddressList(firstRow, endRow, firstCol, endCol);
+        // 数据有效性对象
+        DataValidation dataValidation = helper.createValidation(constraint, regions);
+        if (StringUtils.isNotEmpty(promptContent)) {
+            // 如果设置了提示信息则鼠标放上去提示
+            dataValidation.createPromptBox("", promptContent);
+            dataValidation.setShowPromptBox(true);
+        }
+        // 处理Excel兼容性问题
+        if (dataValidation instanceof XSSFDataValidation) {
+            dataValidation.setSuppressDropDownArrow(true);
+            dataValidation.setShowErrorBox(true);
+        } else {
+            dataValidation.setSuppressDropDownArrow(false);
+        }
+
+        sheet.addValidationData(dataValidation);
+    }
+
+    /**
+     * 解析导出值 0=男,1=女,2=未知
+     *
+     * @param propertyValue 参数值
+     * @param converterExp  翻译注解
+     * @param separator     分隔符
+     * @return 解析后值
+     */
+    public static String convertByExp(String propertyValue, String converterExp, String separator) {
+        StringBuilder propertyString = new StringBuilder();
+        String[] convertSource = converterExp.split(",");
+        for (String item : convertSource) {
+            String[] itemArray = item.split("=");
+            if (StringUtils.containsAny(propertyValue, separator)) {
+                for (String value : propertyValue.split(separator)) {
+                    if (itemArray[0].equals(value)) {
+                        propertyString.append(itemArray[1]).append(separator);
+                        break;
+                    }
+                }
+            } else {
+                if (itemArray[0].equals(propertyValue)) {
+                    return itemArray[1];
+                }
+            }
+        }
+        return StringUtils.stripEnd(propertyString.toString(), separator);
+    }
+
+    /**
+     * 反向解析值 男=0,女=1,未知=2
+     *
+     * @param propertyValue 参数值
+     * @param converterExp  翻译注解
+     * @param separator     分隔符
+     * @return 解析后值
+     */
+    public static String reverseByExp(String propertyValue, String converterExp, String separator) {
+        StringBuilder propertyString = new StringBuilder();
+        String[] convertSource = converterExp.split(",");
+        for (String item : convertSource) {
+            String[] itemArray = item.split("=");
+            if (StringUtils.containsAny(propertyValue, separator)) {
+                for (String value : propertyValue.split(separator)) {
+                    if (itemArray[1].equals(value)) {
+                        propertyString.append(itemArray[0]).append(separator);
+                        break;
+                    }
+                }
+            } else {
+                if (itemArray[1].equals(propertyValue)) {
+                    return itemArray[0];
+                }
+            }
+        }
+        return StringUtils.stripEnd(propertyString.toString(), separator);
+    }
+
+    /**
+     * 解析字典值
+     *
+     * @param dictValue 字典值
+     * @param dictType  字典类型
+     * @param separator 分隔符
+     * @return 字典标签
+     */
+    public static String convertDictByExp(String dictValue, String dictType, String separator) {
+        return DictUtils.getDictLabel(dictType, dictValue, separator);
+    }
+
+    /**
+     * 反向解析值字典值
+     *
+     * @param dictLabel 字典标签
+     * @param dictType  字典类型
+     * @param separator 分隔符
+     * @return 字典值
+     */
+    public static String reverseDictByExp(String dictLabel, String dictType, String separator) {
+        return DictUtils.getDictValue(dictType, dictLabel, separator);
+    }
+
+    /**
+     * 数据处理器
+     *
+     * @param value 数据值
+     * @param excel 数据注解
+     */
+    public String dataFormatHandlerAdapter(Object value, Excel excel, Cell cell) {
+        try {
+            Object instance = excel.handler().getDeclaredConstructor().newInstance();
+            Method formatMethod = excel.handler().getMethod("format", Object.class, String[].class, Cell.class, Workbook.class);
+            value = formatMethod.invoke(instance, value, excel.args(), cell, this.wb);
+        } catch (Exception e) {
+            log.error("不能格式化数据 {}", excel.handler(), e);
+        }
+        return Convert.toStr(value);
+    }
+
+    /**
+     * 合计统计信息
+     */
+    private void addStatisticsData(Integer index, String text, Excel entity) {
+        if (entity != null && entity.isStatistics()) {
+            Double temp = 0D;
+            if (!statistics.containsKey(index)) {
+                statistics.put(index, temp);
+            }
+            try {
+                temp = Double.valueOf(text);
+            } catch (NumberFormatException e) {
+                org.slf4j.LoggerFactory.getLogger(ExcelUtil.class).debug("使用备用处理逻辑", e);
+            }
+            statistics.put(index, statistics.get(index) + temp);
+        }
+    }
+
+    /**
+     * 创建统计行
+     */
+    public void addStatisticsRow() {
+        if (!statistics.isEmpty()) {
+            Row row = sheet.createRow(sheet.getLastRowNum() + 1);
+            Set<Integer> keys = statistics.keySet();
+            Cell cell = row.createCell(0);
+            cell.setCellStyle(styles.get("total"));
+            cell.setCellValue("合计");
+
+            for (Integer key : keys) {
+                cell = row.createCell(key);
+                cell.setCellStyle(styles.get("total"));
+                cell.setCellValue(DOUBLE_FORMAT.format(statistics.get(key)));
+            }
+            statistics.clear();
+        }
+    }
+
+    /**
+     * 编码文件名
+     */
+    public String encodingFilename(String filename) {
+        filename = UUID.randomUUID() + "_" + filename + ".xlsx";
+        return filename;
+    }
+
+    /**
+     * 获取下载路径
+     *
+     * @param filename 文件名称
+     */
+    public String getAbsoluteFile(String filename) {
+        String downloadPath = HongshuConfig.getDownloadPath() + filename;
+        File desc = new File(downloadPath);
+        if (!desc.getParentFile().isDirectory() && !desc.getParentFile().mkdirs()
+                && !desc.getParentFile().isDirectory()) {
+            throw new IllegalStateException("无法创建下载目录: " + desc.getParent());
+        }
+        return downloadPath;
+    }
+
+    /**
+     * 获取bean中的属性值
+     *
+     * @param vo    实体对象
+     * @param field 字段
+     * @param excel 注解
+     * @return 最终的属性值
+     */
+    private Object getTargetValue(T vo, Field field, Excel excel) throws Exception {
+        Object o = field.get(vo);
+        if (StringUtils.isNotEmpty(excel.targetAttr())) {
+            String target = excel.targetAttr();
+            if (target.contains(".")) {
+                String[] targets = target.split("[.]");
+                for (String name : targets) {
+                    o = getValue(o, name);
+                }
+            } else {
+                o = getValue(o, target);
+            }
+        }
+        return o;
+    }
+
+    /**
+     * 以类的属性的get方法方法形式获取值
+     *
+     * @return value
+     */
+    private Object getValue(Object o, String name) throws Exception {
+        if (StringUtils.isNotNull(o) && StringUtils.isNotEmpty(name)) {
+            Class<?> clazz = o.getClass();
+            Field field = clazz.getDeclaredField(name);
+            field.setAccessible(true);
+            o = field.get(o);
+        }
+        return o;
+    }
+
+    /**
+     * 得到所有定义字段
+     */
+    private void createExcelField() {
+        this.fields = getFields();
+        this.fields = this.fields.stream().sorted(Comparator.comparing(objects -> ((Excel) objects[1]).sort())).collect(Collectors.toList());
+        this.maxHeight = getRowHeight();
+    }
 }
