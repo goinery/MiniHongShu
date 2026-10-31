@@ -1,4 +1,224 @@
-<template></template>
+<template>
+  <div class="app-container business-page">
+    <BusinessPageHeader title="内容审核" :count="total" />
+    <el-form class="business-filter"
+      :model="queryParams"
+      ref="queryRef"
+      :inline="true"
+      v-show="showSearch"
+    >
+      <el-form-item label="分类" prop="pid">
+        <el-tree-select
+          v-model="queryParams.pid"
+          :data="navbarOptions"
+          :props="{
+            value: 'id',
+            label: 'title',
+            children: 'children',
+            disabled: 'disabled',
+          }"
+          value-key="id"
+          placeholder="请选择分类"
+          check-strictly
+          clearable
+          style="width: 200px"
+          @change="handleQuery"
+        />
+      </el-form-item>
+      <el-form-item label="标题" prop="title">
+        <el-input
+          v-model="queryParams.title"
+          placeholder="请输入标题"
+          clearable
+          style="width: 200px"
+          @keyup.enter="handleQuery"
+        />
+      </el-form-item>
+      <el-form-item label="作者" prop="uid">
+        <el-input
+          v-model="queryParams.uid"
+          placeholder="请输入作者ID"
+          clearable
+          style="width: 200px"
+          @keyup.enter="handleQuery"
+        />
+      </el-form-item>
+      <el-form-item label="类型" prop="type">
+        <el-select
+          v-model="queryParams.type"
+          placeholder="笔记类型"
+          @change="handleQuery"
+          clearable
+          style="width: 200px"
+        >
+          <el-option
+            v-for="dict in note_type"
+            :key="dict.value"
+            :label="dict.label"
+            :value="dict.value"
+          />
+        </el-select>
+      </el-form-item>
+
+      <el-form-item label="创建时间" style="width: 308px">
+        <el-date-picker
+          v-model="dateRange"
+          value-format="YYYY-MM-DD"
+          type="daterange"
+          range-separator="-"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+        >
+        </el-date-picker>
+      </el-form-item>
+      <el-form-item>
+        <el-button type="primary" icon="Search" @click="handleQuery"
+          >搜索</el-button
+        >
+        <el-button icon="Refresh" @click="resetQuery">重置 </el-button>
+      </el-form-item>
+    </el-form>
+
+    <el-row :gutter="10" class="mb8 business-toolbar">
+      <el-col :span="1.5">
+        <el-button
+          type="success"
+          plain
+          icon="Check"
+          :disabled="multiple"
+          @click="handleBatchAudit('pass')"
+          v-hasPermi="['web:note:audit']"
+        >
+          批量通过
+        </el-button>
+      </el-col>
+      <el-col :span="1.5">
+        <el-button
+          type="danger"
+          plain
+          icon="Close"
+          :disabled="multiple"
+          @click="handleBatchAudit('reject')"
+          v-hasPermi="['web:note:audit']"
+        >
+          批量驳回
+        </el-button>
+      </el-col>
+      <el-col :span="1.5">
+        <el-button
+          type="danger"
+          plain
+          icon="Delete"
+          :disabled="multiple"
+          @click="handleDelete"
+          v-hasPermi="['web:note:remove']"
+        >
+          删除
+        </el-button>
+      </el-col>
+      <right-toolbar
+        v-model:showSearch="showSearch"
+        @queryTable="getList"
+      ></right-toolbar>
+    </el-row>
+
+    <el-table class="business-table"
+      v-loading="loading"
+      :data="noteList"
+      @selection-change="handleSelectionChange"
+    >
+      <el-table-column type="selection" width="55" align="center" />
+      <el-table-column label="序号" align="center" prop="id" width="80" />
+      <el-table-column
+        label="分类"
+        align="center"
+        prop="cpid"
+        width="110"
+        :formatter="categoryFormatter"
+        show-overflow-tooltip
+      />
+      <el-table-column
+        label="标题"
+        align="left"
+        prop="title"
+        min-width="160"
+        show-overflow-tooltip
+      />
+      <el-table-column label="作者" align="center" prop="author" width="110" show-overflow-tooltip />
+      <el-table-column label="封面" align="center" prop="noteCover" width="80">
+        <template #default="scope">
+          <el-image
+            v-if="scope.row.noteCover"
+            class="cover-thumb"
+            :src="scope.row.noteCover"
+            :preview-src-list="[scope.row.noteCover]"
+            fit="cover"
+            preview-teleported
+          />
+          <span v-else>—</span>
+        </template>
+      </el-table-column>
+      <el-table-column
+        label="内容"
+        align="left"
+        prop="content"
+        min-width="180"
+        show-overflow-tooltip
+      />
+      <el-table-column label="图片" align="center" prop="count" width="70" />
+      <el-table-column label="类型" align="center" prop="noteType">
+        <template #default="scope">
+          <dict-tag :options="note_type" :value="displayNoteType(scope.row.noteType)" />
+        </template>
+      </el-table-column>
+      <el-table-column label="状态" align="center" prop="auditStatus">
+        <template #default="scope">
+          <dict-tag :options="audit_status" :value="scope.row.auditStatus" />
+        </template>
+      </el-table-column>
+      <el-table-column
+        label="创建时间"
+        align="center"
+        prop="createTime"
+        width="180"
+      >
+        <template #default="scope">
+          <span>{{ parseTime(scope.row.createTime) }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column
+        label="更新时间"
+        align="center"
+        prop="updateTime"
+        width="180"
+      >
+        <template #default="scope">
+          <span>{{ parseTime(scope.row.updateTime) }}</span>
+        </template>
+      </el-table-column>
+
+      <el-table-column
+        label="操作"
+        align="center"
+        fixed="right"
+        min-width="200"
+      >
+        <template #default="scope">
+          <el-button link type="primary" size="small" @click="openDetail(scope.row)">
+            查看
+          </el-button>
+          <el-button
+            @click="handleAudit(scope.row, 'pass')"
+            v-hasPermi="['web:note:audit']"
+            type="success"
+            size="small"
+          >
+            通过
+          </el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+  </div></template>
 
 <script setup>
 import { Plus } from '@element-plus/icons-vue'
