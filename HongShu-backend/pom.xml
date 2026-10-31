@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>4.1.2</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.hongshu</groupId>
+    <artifactId>hognshu</artifactId>
+    <version>1.0.0</version>
+
+    <name>hongshu</name>
+    <packaging>pom</packaging>
+    <description>红薯系统</description>
+
+    <modules>
+        <module>hongshu-server</module>
+        <module>hongshu-common</module>
+        <module>hongshu-framework</module>
+        <module>hongshu-quartz</module>
+        <module>hongshu-system</module>
+        <module>hongshu-web</module>
+    </modules>
+
+    <properties>
+        <hongshu.version>1.0.0</hongshu.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <java.version>21</java.version>
+        <!-- 安全修复版本；Jackson 2/3 分别保持同一 BOM 内的组件一致。 -->
+        <jackson-2-bom.version>2.21.8</jackson-2-bom.version>
+        <jackson-bom.version>3.1.8</jackson-bom.version>
+        <logback.version>1.6.6</logback.version>
+        <mysql.version>26.10.0</mysql.version>
+        <druid.version>1.2.28</druid.version>
+        <bitwalker.version>1.21</bitwalker.version>
+        <springdoc.version>3.2.0</springdoc.version>
+        <kaptcha.version>2.3.3</kaptcha.version>
+        <pagehelper.boot.version>4.1.1</pagehelper.boot.version>
+        <fastjson.version>2.0.66</fastjson.version>
+        <oshi.version>6.5.0</oshi.version>
+        <commons.io.version>2.22.0</commons.io.version>
+        <commons.compress.version>1.28.0</commons.compress.version>
+        <commons.beanutils.version>1.11.0</commons.beanutils.version>
+        <poi.version>6.0.0</poi.version>
+        <jwt.version>0.9.1</jwt.version>
+        <hutool.version>5.8.48</hutool.version>
+        <flexmark.version>0.62.2</flexmark.version>
+        <jsoup.version>1.23.2</jsoup.version>
+        <bouncycastle.version>1.86</bouncycastle.version>
+        <!-- 保持 OpenTelemetry API/context 同版本，修复 tracestate 解析资源耗尽。 -->
+        <opentelemetry.version>1.67.0</opentelemetry.version>
+        <mybatisplus.version>3.5.18</mybatisplus.version>
+    </properties>
+
+    <!-- 依赖声明 -->
+    <dependencyManagement>
+        <dependencies>
+            <!-- Spring Framework 与基础组件版本由 Spring Boot parent 管理。 -->
+            <!-- 阿里数据库连接池 -->
+            <dependency>
+                <groupId>com.alibaba</groupId>
+                <artifactId>druid-spring-boot-4-starter</artifactId>
+                <version>${druid.version}</version>
+            </dependency>
+            <!-- 解析客户端操作系统、浏览器等 -->
+            <dependency>
+                <groupId>eu.bitwalker</groupId>
+                <artifactId>UserAgentUtils</artifactId>
+                <version>${bitwalker.version}</version>
+            </dependency>
+            <!-- pagehelper 分页插件 -->
+            <dependency>
+                <groupId>com.github.pagehelper</groupId>
+                <artifactId>pagehelper-spring-boot-starter</artifactId>
+                <version>${pagehelper.boot.version}</version>
+            </dependency>
+            <!-- 获取系统信息 -->
+            <dependency>
+                <groupId>com.github.oshi</groupId>
+                <artifactId>oshi-core</artifactId>
+                <version>${oshi.version}</version>
+            </dependency>
+            <!-- OpenAPI 文档 -->
+            <dependency>
+                <groupId>org.springdoc</groupId>
+                <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+                <version>${springdoc.version}</version>
+            </dependency>
+            <!-- io常用工具类 -->
+            <dependency>
+                <groupId>commons-io</groupId>
+                <artifactId>commons-io</artifactId>
+                <version>${commons.io.version}</version>
+            </dependency>
+            <!-- excel工具 -->
+            <dependency>
+                <groupId>org.apache.poi</groupId>
+                <artifactId>poi-ooxml</artifactId>
+                <version>${poi.version}</version>
+            </dependency>
+            <!-- 阿里JSON解析器 -->
+            <dependency>
+                <groupId>com.alibaba.fastjson2</groupId>
+                <artifactId>fastjson2</artifactId>
+                <version>${fastjson.version}</version>
+            </dependency>
+            <!-- Token生成与解析-->
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt</artifactId>
+                <version>${jwt.version}</version>
+            </dependency>
+            <!-- 验证码 -->
+            <dependency>
+                <groupId>pro.fessional</groupId>
+                <artifactId>kaptcha</artifactId>
+                <version>${kaptcha.version}</version>
+            </dependency>
+            <!-- hutool -->
+            <dependency>
+                <groupId>cn.hutool</groupId>
+                <artifactId>hutool-core</artifactId>
+                <version>${hutool.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>cn.hutool</groupId>
+                <artifactId>hutool-json</artifactId>
+                <version>${hutool.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>cn.hutool</groupId>
+                <artifactId>hutool-crypto</artifactId>
+                <version>${hutool.version}</version>
+            </dependency>
+            <!-- 统一约束传递依赖的安全版本，避免旧工具库重新引入漏洞版本。 -->
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-compress</artifactId>
+                <version>${commons.compress.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>commons-beanutils</groupId>
+                <artifactId>commons-beanutils</artifactId>
+                <version>${commons.beanutils.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jsoup</groupId>
+                <artifactId>jsoup</artifactId>
+                <version>${jsoup.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcprov-jdk18on</artifactId>
+                <version>${bouncycastle.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcpkix-jdk18on</artifactId>
+                <version>${bouncycastle.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcutil-jdk18on</artifactId>
+                <version>${bouncycastle.version}</version>
+            </dependency>
+            <!-- mybatis-plus-->
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>mybatis-plus-spring-boot4-starter</artifactId>
+                <version>${mybatisplus.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.baomidou</groupId>
+                        <artifactId>mybatis-plus-generator</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <!-- 定时任务 -->
+            <dependency>
+                <groupId>com.hongshu</groupId>
+                <artifactId>hongshu-quartz</artifactId>
+                <version>${hongshu.version}</version>
+            </dependency>
+            <!-- 核心模块-->
+            <dependency>
+                <groupId>com.hongshu</groupId>
+                <artifactId>hongshu-framework</artifactId>
+                <version>${hongshu.version}</version>
+            </dependency>
+            <!-- 系统模块-->
+            <dependency>
+                <groupId>com.hongshu</groupId>
+                <artifactId>hongshu-system</artifactId>
+                <version>${hongshu.version}</version>
+            </dependency>
+            <!-- web模块-->
+            <dependency>
+                <groupId>com.hongshu</groupId>
+                <artifactId>hongshu-web</artifactId>
+                <version>${hongshu.version}</version>
+            </dependency>
+            <!-- 通用工具-->
+            <dependency>
+                <groupId>com.hongshu</groupId>
+                <artifactId>hongshu-common</artifactId>
+                <version>${hongshu.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <parameters>true</parameters>
+                    <compilerArgs>
+                        <arg>-Xlint:unchecked</arg>
+                    </compilerArgs>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <repositories>
+        <repository>
+            <id>public</id>
+            <name>aliyun nexus</name>
+            <url>https://maven.aliyun.com/repository/public</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+        </repository>
+    </repositories>
+
+    <pluginRepositories>
+        <pluginRepository>
+            <id>public</id>
+            <name>aliyun nexus</name>
+            <url>https://maven.aliyun.com/repository/public</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </pluginRepository>
+    </pluginRepositories>
+
+</project>
