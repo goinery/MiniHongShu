@@ -305,3 +305,162 @@ html.dark-mode .upload-tip,
 html.dark-mode .tag-title-text {
   color: rgba(229, 231, 235, 0.55) !important;
 }
+
+html.dark-mode .user-tabs .tab-item {
+  color: rgba(229, 231, 235, 0.72);
+}
+
+html.dark-mode .user-tabs .tab-item.active {
+  color: var(--el-color-primary) !important;
+  background: rgba(var(--brand-color-rgb), 0.16) !important;
+}
+
+html.dark-mode .push-container .header {
+  color: #e5e7eb !important;
+}
+
+html.dark-mode .el-upload--picture-card {
+  background: var(--el-color-primary-light-9) !important;
+  border-color: rgba(var(--brand-color-rgb), 0.35) !important;
+  color: var(--el-color-primary) !important;
+}
+
+html.dark-mode .el-input__wrapper,
+html.dark-mode .el-textarea__inner,
+html.dark-mode .el-select__wrapper {
+  background-color: #111827 !important;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12) inset !important;
+}
+
+html.dark-mode .el-input__inner,
+html.dark-mode .el-textarea__inner,
+html.dark-mode .el-select__placeholder,
+html.dark-mode .el-select__selected-item {
+  color: #e5e7eb !important;
+}
+
+html.dark-mode .el-dialog,
+html.dark-mode .el-dialog__header,
+html.dark-mode .el-dialog__body,
+html.dark-mode .el-dialog__footer {
+  background: #1f2937 !important;
+}
+
+html.dark-mode .el-dialog__title,
+html.dark-mode .field-head,
+html.dark-mode .field-head label {
+  color: #e5e7eb !important;
+}
+
+html.dark-mode .el-empty__description,
+html.dark-mode .el-empty__description p {
+  color: rgba(229, 231, 235, 0.65) !important;
+}
+
+html.dark-mode .note-detail-mask,
+html.dark-mode .back-desk {
+  background-color: rgba(0, 0, 0, 0.62) !important;
+}
+
+html.dark-mode .note-container {
+  background-color: #1f2937 !important;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.45) !important;
+}
+
+html.dark-mode .note-container .media-container {
+  background: rgba(255, 255, 255, 0.04) !important;
+}
+
+html.dark-mode .note-container .interaction-container {
+  background-color: #1f2937 !important;
+  border-left-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+html.dark-mode .note-container .author-me .name,
+html.dark-mode .note-content .title,
+html.dark-mode .note-content .desc,
+html.dark-mode .comments-container .content,
+html.dark-mode .comments-container .total {
+  color: #e5e7eb !important;
+}
+
+html.dark-mode .note-content .desc .tag {
+  color: var(--el-color-primary) !important;
+}
+
+html.dark-mode .note-content .bottom-container .date,
+html.dark-mode .comments-container .author .name,
+html.dark-mode .comments-container .info {
+  color: rgba(229, 231, 235, 0.55) !important;
+}
+
+html.dark-mode .note-scroller .divider,
+html.dark-mode .interaction-divider {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+html.dark-mode .interactions-footer {
+  background: #1f2937 !important;
+  border-top-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+html.dark-mode .interactions-footer .left,
+html.dark-mode .interactions-footer .left .chat-wrapper,
+html.dark-mode .like-wrapper,
+html.dark-mode .collect-wrapper {
+  color: rgba(229, 231, 235, 0.75) !important;
+}
+
+html.dark-mode .comment-input,
+html.dark-mode .input-wrapper .comment-input {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #e5e7eb !important;
+  caret-color: #e5e7eb !important;
+}
+
+html.dark-mode .comment-input::placeholder,
+html.dark-mode .input-buttons {
+  color: rgba(229, 231, 235, 0.35) !important;
+}
+
+html.dark-mode .close,
+html.dark-mode .close-cricle .close {
+  background-color: #1f2937 !important;
+  color: #e5e7eb !important;
+}
+
+html.dark-mode .chat-container,
+html.dark-mode .chat-header,
+html.dark-mode .chat-footer,
+html.dark-mode .post-content,
+html.dark-mode .message-conent {
+  background-color: #1f2937 !important;
+  color: #e5e7eb !important;
+}
+
+html.dark-mode .message-conent {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+html.dark-mode .middle,
+html.dark-mode .filter,
+html.dark-mode .divider.rec-filter {
+  color: #e5e7eb !important;
+}
+
+html.dark-mode .divider.rec-filter {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+html.dark-mode .action-icon,
+html.dark-mode .chat-wrapper svg {
+  color: #e5e7eb !important;
+}
+
+html.dark-mode .msg-count {
+  color: #fff !important;
+}
+
+html.dark-mode .overlay {
+  color: #fff !important;
+}
