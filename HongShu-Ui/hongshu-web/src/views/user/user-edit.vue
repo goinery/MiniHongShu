@@ -1,4 +1,139 @@
-<template></template>
+<template>
+  <el-dialog
+    :model-value="modelValue"
+    title="编辑资料"
+    class="community-dialog profile-edit-dialog"
+    align-center append-to-body destroy-on-close
+    :close-on-click-modal="!busy && !cameraVisible"
+    :close-on-press-escape="!busy && !cameraVisible"
+    :show-close="!busy"
+    @update:model-value="closeDialog"
+  >
+    <el-tabs v-model="activeTab" class="edit-tabs" :before-leave="() => !busy && !checkingAvatar && !uploadingAvatar">
+      <el-tab-pane label="个人资料" name="profile">
+        <div ref="profileFields" class="profile-layout">
+          <aside class="avatar-settings" aria-label="头像设置">
+            <div class="avatar-upload-content">
+              <button type="button" class="avatar-uploader" :disabled="saving || checkingAvatar || uploadingAvatar" aria-label="选择本地图片上传头像" @click="openAvatarUpload">
+                <div class="avatar-wrap" :class="{ 'is-uploading': checkingAvatar || uploadingAvatar }">
+                  <img :src="form.avatar || '/default-avatar.png'" class="avatar" alt="头像预览" @error="fallbackAvatar" />
+                  <div class="avatar-mask"><el-icon><Upload /></el-icon></div>
+                </div>
+              </button>
+              <input ref="avatarFileInput" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/bmp,.jpg,.jpeg,.png,.webp,.gif,.bmp" hidden @change="selectAvatarFile" />
+              <button type="button" class="avatar-action" :disabled="saving || checkingAvatar || uploadingAvatar" @click="cameraVisible = true"><el-icon><Camera /></el-icon>{{ checkingAvatar ? '校验中…' : uploadingAvatar ? '上传中…' : '拍照更换头像' }}</button>
+            </div>
+            <div class="avatar-identity"><strong>{{ form.username || '你的昵称' }}</strong><span>会员号：{{ userInfo?.hsId ?? '—' }}</span></div>
+            <div class="ip-location"><el-icon><Location /></el-icon><span>IP属地</span><strong>{{ userInfo?.address || '待识别' }}</strong></div>
+            <div class="avatar-url-field">
+              <label for="profile-avatar-url" class="avatar-url-label">头像链接</label>
+              <div class="avatar-url-controls">
+                <el-input id="profile-avatar-url" v-model="avatarUrl" :prefix-icon="Link" placeholder="粘贴图片链接" clearable :disabled="saving || checkingAvatar || uploadingAvatar" @keyup.enter.prevent="applyAvatarUrl" />
+                <el-button :icon="Check" aria-label="使用头像链接" :loading="checkingAvatar" :disabled="saving || uploadingAvatar || !avatarUrl.trim()" @click="applyAvatarUrl" />
+              </div>
+              <p v-if="avatarError" class="field-error" role="alert">{{ avatarError }}</p>
+            </div>
+            <el-button v-if="avatarChanged" type="primary" link :disabled="saving || uploadingAvatar" @click="restoreAvatar">恢复原头像</el-button>
+          </aside>
+
+          <div class="profile-fields">
+            <section class="profile-section" aria-labelledby="profile-basic-heading">
+              <h3 id="profile-basic-heading" class="section-heading">基本信息</h3>
+              <div class="field-grid">
+                <div class="field full-width" :class="{ 'is-invalid': profileErrors.username }">
+                  <div class="field-head"><label for="profile-username"><span class="required">*</span>昵称</label><span>{{ form.username.length }}/50</span></div>
+                  <el-input id="profile-username" v-model="form.username" maxlength="50" placeholder="请输入昵称" :disabled="saving" :aria-invalid="Boolean(profileErrors.username)" @input="profileErrors.username = ''" @blur="validateProfileField('username')" />
+                  <p v-if="profileErrors.username" class="field-error" role="alert">{{ profileErrors.username }}</p>
+                </div>
+                <div class="field">
+                  <div class="field-head"><span id="profile-gender-label">性别</span></div>
+                  <div class="gender-options" role="group" aria-labelledby="profile-gender-label">
+                    <button type="button" class="gender-choice is-male" :class="{ active: form.gender === '0' }" :aria-pressed="form.gender === '0'" :disabled="saving" @click="form.gender = '0'"><el-icon><Male /></el-icon>男</button>
+                    <button type="button" class="gender-choice is-female" :class="{ active: form.gender === '1' }" :aria-pressed="form.gender === '1'" :disabled="saving" @click="form.gender = '1'"><el-icon><Female /></el-icon>女</button>
+                    <button type="button" class="gender-choice" :class="{ active: form.gender === '2' }" :aria-pressed="form.gender === '2'" :disabled="saving" @click="form.gender = '2'">保密</button>
+                  </div>
+                </div>
+                <div class="field" :class="{ 'is-invalid': profileErrors.birthday }">
+                  <div class="field-head"><label for="profile-birthday">生日</label></div>
+                  <el-date-picker id="profile-birthday" v-model="form.birthday" type="date" value-format="YYYY-MM-DD" format="YYYY-MM-DD" placeholder="选择生日" :disabled="saving" :disabled-date="disableFutureDate" clearable @change="validateProfileField('birthday')" />
+                  <p v-if="profileErrors.birthday" class="field-error" role="alert">{{ profileErrors.birthday }}</p>
+                </div>
+              </div>
+            </section>
+
+            <section class="profile-section" aria-labelledby="profile-intro-heading">
+              <h3 id="profile-intro-heading" class="section-heading">个人介绍</h3>
+              <div class="field">
+                <div class="field-head"><label for="profile-description">简介</label><span>{{ form.description.length }}/250</span></div>
+                <el-input id="profile-description" v-model="form.description" class="description-input" type="textarea" :rows="3" resize="vertical" :disabled="saving" maxlength="250" placeholder="介绍一下自己吧" />
+              </div>
+              <div class="field tags-field">
+                <div class="field-head"><span>标签</span><span>{{ form.tags.length }}/4</span></div>
+                <div class="tag-input-row">
+                  <el-input v-model="inputValue" aria-label="标签名称" maxlength="8" placeholder="输入标签，最多8个字" clearable :disabled="saving || form.tags.length >= 4" @keyup.enter.prevent="confirmTag" />
+                  <el-button type="primary" round :icon="Plus" :disabled="saving || form.tags.length >= 4 || !inputValue.trim()" @click="confirmTag">添加</el-button>
+                </div>
+                <p v-if="tagError" class="field-error" role="alert">{{ tagError }}</p>
+                <div v-if="form.tags.length" class="tags"><el-tag v-for="tag in form.tags" :key="tag" :closable="!saving" disable-transitions round effect="plain" type="primary" @close="removeTag(tag)">{{ tag }}</el-tag></div>
+              </div>
+            </section>
+
+            <section class="profile-section contact-section" aria-labelledby="profile-contact-heading">
+              <div class="section-heading-row"><h3 id="profile-contact-heading" class="section-heading">联系方式</h3><span class="private-label"><el-icon><Lock /></el-icon>仅自己可见</span></div>
+              <div class="field-grid">
+                <div class="field" :class="{ 'is-invalid': profileErrors.phone }">
+                  <div class="field-head"><label for="profile-phone"><span class="required">*</span>手机号</label></div>
+                  <el-input id="profile-phone" v-model="form.phone" type="tel" inputmode="numeric" autocomplete="tel" maxlength="11" placeholder="请输入11位手机号" :disabled="saving" :aria-invalid="Boolean(profileErrors.phone)" @input="profileErrors.phone = ''" @blur="validateProfileField('phone')" />
+                  <p v-if="profileErrors.phone" class="field-error" role="alert">{{ profileErrors.phone }}</p>
+                  <p v-else-if="phoneChanged" class="field-hint">保存后请使用新手机号登录</p>
+                </div>
+                <div class="field" :class="{ 'is-invalid': profileErrors.email }">
+                  <div class="field-head"><label for="profile-email">邮箱</label><span>选填</span></div>
+                  <el-input id="profile-email" v-model="form.email" type="email" autocomplete="email" maxlength="100" placeholder="请输入邮箱地址" :disabled="saving" :aria-invalid="Boolean(profileErrors.email)" clearable @input="profileErrors.email = ''" @blur="validateProfileField('email')" />
+                  <p v-if="profileErrors.email" class="field-error" role="alert">{{ profileErrors.email }}</p>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </el-tab-pane>
+
+      <el-tab-pane label="修改密码" name="password">
+        <form id="profile-password-form" ref="passwordFields" class="password-form" @submit.prevent="savePassword">
+          <div class="password-intro"><span class="password-icon"><el-icon><Lock /></el-icon></span><div><h3>设置新密码</h3><p>修改成功后，请使用新密码重新登录。</p></div></div>
+          <div class="field" :class="{ 'is-invalid': passwordErrors.oldPassword }">
+            <div class="field-head"><label for="profile-old-password">原密码</label></div>
+            <el-input id="profile-old-password" v-model="passwordForm.oldPassword" type="password" show-password autocomplete="current-password" maxlength="72" placeholder="请输入原密码" :disabled="changingPassword" @input="passwordErrors.oldPassword = ''" />
+            <p v-if="passwordErrors.oldPassword" class="field-error" role="alert">{{ passwordErrors.oldPassword }}</p>
+          </div>
+          <div class="field" :class="{ 'is-invalid': passwordErrors.newPassword }">
+            <div class="field-head"><label for="profile-new-password">新密码</label></div>
+            <el-input id="profile-new-password" v-model="passwordForm.newPassword" type="password" show-password autocomplete="new-password" maxlength="72" placeholder="至少6位的新密码" :disabled="changingPassword" @input="passwordErrors.newPassword = ''; passwordErrors.confirmPassword = ''" />
+            <p v-if="passwordErrors.newPassword" class="field-error" role="alert">{{ passwordErrors.newPassword }}</p>
+            <p v-else class="field-hint">至少6位，不超过72字节；中文等字符会占用多个字节。</p>
+          </div>
+          <div class="field" :class="{ 'is-invalid': passwordErrors.confirmPassword }">
+            <div class="field-head"><label for="profile-confirm-password">确认新密码</label></div>
+            <el-input id="profile-confirm-password" v-model="passwordForm.confirmPassword" type="password" show-password autocomplete="new-password" maxlength="72" placeholder="请再次输入新密码" :disabled="changingPassword" @input="passwordErrors.confirmPassword = ''" @blur="validatePasswordConfirmation" />
+            <p v-if="passwordErrors.confirmPassword" class="field-error" role="alert">{{ passwordErrors.confirmPassword }}</p>
+            <p v-else-if="passwordForm.confirmPassword && passwordForm.confirmPassword === passwordForm.newPassword" class="field-hint is-valid"><el-icon><Check /></el-icon>两次输入一致</p>
+          </div>
+        </form>
+      </el-tab-pane>
+    </el-tabs>
+    <CameraAvatar v-model="cameraVisible" @captured="setAvatarFromFile" />
+    <template #footer>
+      <div class="profile-footer">
+        <span v-if="activeTab === 'profile' && profileDirty" class="unsaved-label">有未保存的修改</span>
+        <div class="footer-actions">
+          <el-button round :disabled="busy" @click="closeDialog(false)">取消</el-button>
+          <el-button v-if="activeTab === 'profile'" type="primary" round :loading="saving" :disabled="!profileDirty || checkingAvatar || uploadingAvatar" @click="save">保存资料</el-button>
+          <el-button v-else type="primary" round native-type="submit" form="profile-password-form" :loading="changingPassword">确认修改密码</el-button>
+        </div>
+      </div>
+    </template>
+  </el-dialog>
+</template>
 
 <script lang="ts" setup>
 import { computed, nextTick, onBeforeUnmount, reactive, ref, watch } from "vue";
