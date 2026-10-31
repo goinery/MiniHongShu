@@ -1,0 +1,96 @@
+@import './variables.module.scss';
+
+#app {
+  .app-wrapper {
+    --sidebar-layout-width: #{$base-sidebar-width};
+    --sidebar-motion-duration: .18s;
+    --sidebar-motion-easing: cubic-bezier(.2, .6, .35, 1);
+  }
+  .main-container { min-height: 100%; transition: margin-left var(--sidebar-motion-duration) var(--sidebar-motion-easing); margin-left: var(--sidebar-layout-width); position: relative; }
+  .sidebarHide { --sidebar-layout-width: 0px; margin-left: 0 !important; }
+  .topNavigation { --sidebar-layout-width: 0px; }
+  .sidebar-container {
+    --el-menu-bg-color: transparent;
+    --el-menu-text-color: var(--cf-text);
+    --el-menu-active-color: var(--el-color-primary);
+    --el-menu-hover-bg-color: var(--cf-hover);
+    --el-menu-item-height: 38px;
+    --el-menu-sub-item-height: 36px;
+    --el-menu-base-level-padding: 12px;
+    width: $base-sidebar-width !important;
+    position: fixed; top: 0; bottom: 0; left: 0; z-index: 1001;
+    display: flex; flex-direction: column; overflow: hidden;
+    margin: 0; padding: 0; border-right: 1px solid var(--cf-border);
+    background: var(--cf-background); color: var(--cf-text);
+    font-size: 13px; line-height: normal; transition: width var(--sidebar-motion-duration) var(--sidebar-motion-easing), box-shadow var(--sidebar-motion-duration) var(--sidebar-motion-easing);
+    .sidebar-content { display: flex; flex-direction: column; flex: 1; width: calc(#{$base-sidebar-width} - 1px); min-height: 0; height: 100%; }
+    .sidebar-search { --search-trigger-width: calc(#{$base-sidebar-width} - 29px); flex-shrink: 0; padding: 12px 14px 10px; }
+    .sidebar-menu-scroll { flex: 1; min-height: 0; height: auto; }
+    .sidebar-menu-scroll > .el-scrollbar__wrap > .el-scrollbar__view > .el-menu { transition: width var(--sidebar-motion-duration) var(--sidebar-motion-easing); }
+    .scrollbar-wrapper { overflow-x: hidden !important; }
+    .el-scrollbar__bar.is-vertical { right: 2px; }
+    .is-horizontal { display: none; }
+    .el-menu { border: 0; width: 100%; padding: 0 12px; background: transparent; }
+    .el-menu .el-menu { padding: 0; }
+    a { display: block; width: 100%; overflow: hidden; }
+    .el-menu-item, .el-sub-menu__title { margin: 2px 0; border-radius: 6px; font-size: 13px; height: 38px; line-height: 38px; }
+    .el-menu-item .svg-icon, .el-sub-menu__title > .svg-icon { color: var(--cf-muted); margin-right: 11px; width: 15px; height: 15px; flex-shrink: 0; }
+    .menu-title { text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
+    .el-sub-menu__icon-arrow { right: 10px; color: var(--cf-muted); font-size: 11px; transform: rotate(-90deg) !important; }
+    .el-sub-menu.is-opened > .el-sub-menu__title .el-sub-menu__icon-arrow { transform: rotate(0deg) !important; }
+    .el-menu-item.is-active { background: color-mix(in srgb, var(--el-color-primary) 9%, var(--cf-surface)); color: var(--el-color-primary); font-weight: 600; }
+    .el-menu-item.is-active .svg-icon { color: var(--el-color-primary); }
+    .el-sub-menu.is-active > .el-sub-menu__title { font-weight: 600; }
+    .el-sub-menu .el-menu-item { height: 34px; min-width: 0; line-height: 34px; font-size: 12px; }
+    .sidebar-footer { height: 48px; flex-shrink: 0; border-top: 1px solid var(--cf-border); padding: 8px 16px; display: flex; align-items: center; gap: 8px; }
+    .sidebar-collapse { display: grid; place-items: center; flex-shrink: 0; width: 30px; height: 30px; margin: 0; border: 0; border-radius: 5px; color: var(--cf-muted); background: transparent; cursor: pointer; }
+    .sidebar-collapse:hover { background: var(--cf-hover); }
+  }
+  .sidebar-container:not(.is-compact) .el-menu .el-menu--inline {
+    width: auto;
+    margin: 2px 0 6px 20px;
+    padding: 0 0 0 9px;
+    border-left: 1px solid var(--cf-border);
+    border-radius: 0;
+    .el-menu-item, .el-sub-menu__title { padding-left: 10px !important; padding-right: 12px; font-weight: 400; }
+    .el-menu-item .svg-icon, .el-sub-menu__title > .svg-icon { display: none; }
+    .el-menu-item.is-active { background: color-mix(in srgb, var(--el-color-primary) 9%, var(--cf-surface)); font-weight: 500; }
+    .el-menu-item:hover, .el-sub-menu__title:hover { background: var(--cf-hover); }
+  }
+  .hideSidebar {
+    --sidebar-layout-width: 64px;
+    .sidebar-container { width: 64px !important; }
+    &.hoverSidebar .sidebar-container {
+      width: $base-sidebar-width !important;
+      box-shadow: 8px 0 24px rgba(24, 32, 44, .09);
+    }
+  }
+  .sidebar-container.is-compact {
+    .sidebar-menu-scroll > .el-scrollbar__wrap > .el-scrollbar__view > .el-menu { width: 63px; }
+    .el-menu-item, .el-sub-menu__title { justify-content: flex-start; padding-left: 12px !important; padding-right: 12px !important; }
+    .el-menu-tooltip__trigger { display: flex !important; justify-content: flex-start; padding: 0 12px !important; }
+    .el-menu-item .svg-icon, .el-sub-menu__title > .svg-icon { margin-right: 11px; }
+    .el-menu--collapse .el-sub-menu > .el-sub-menu__title {
+      > span, > .el-sub-menu__icon-arrow { display: none; }
+    }
+  }
+  .mobile {
+    --sidebar-layout-width: 0px;
+    .main-container { margin-left: 0; }
+    .sidebar-container { width: $base-sidebar-width !important; transition: transform var(--sidebar-motion-duration) var(--sidebar-motion-easing); }
+    &.hideSidebar .sidebar-container { pointer-events: none; transform: translate3d(-100%, 0, 0); }
+  }
+  .withoutAnimation .main-container, .withoutAnimation .sidebar-container { transition: none; }
+  .withoutAnimation { --sidebar-motion-duration: 0s; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #app .app-wrapper { --sidebar-motion-duration: 0s; }
+  #app .sidebar-container { transition: none; }
+}
+.el-menu--vertical {
+  .svg-icon { margin-right: 10px; color: var(--cf-muted); }
+  .el-menu--popup { padding: 6px; border: 1px solid var(--cf-border); border-radius: 6px; max-height: 90vh; overflow-y: auto; box-shadow: var(--el-box-shadow-light); }
+  .el-menu-item { border-radius: 4px; font-size: 13px; height: 36px; line-height: 36px; }
+  .el-menu-item.is-active { background: var(--el-color-primary-light-9); color: var(--el-color-primary); }
+}
+
