@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.hongshu.web.mapper.WebCommentMapper">
+
+    <select id="selectReplyPreviews" resultType="com.hongshu.web.domain.entity.WebComment">
+        SELECT ranked.id, ranked.nid, ranked.note_uid, ranked.uid, ranked.pid,
+               ranked.reply_id, ranked.reply_uid, ranked.level, ranked.sort, ranked.content,
+               ranked.like_count, ranked.two_comment_count, ranked.creator, ranked.create_time,
+               ranked.updater, ranked.update_time
+        FROM (
+            SELECT c.id, c.nid, c.note_uid, c.uid, c.pid, c.reply_id, c.reply_uid, c.level, c.sort,
+                   c.content, c.like_count, c.two_comment_count, c.creator, c.create_time,
+                   c.updater, c.update_time, ROW_NUMBER() OVER (
+                PARTITION BY c.pid ORDER BY c.like_count DESC, c.create_time DESC, c.id DESC
+            ) AS reply_position
+            FROM web_comment c
+            WHERE c.pid IN
+            <foreach collection="parentIds" item="parentId" open="(" separator="," close=")">
+                #{parentId}
+            </foreach>
+        ) ranked
+        WHERE ranked.reply_position &lt;= #{limit}
+        ORDER BY ranked.pid, ranked.reply_position
+    </select>
+
+    <select id="selectReplyCounts" resultType="com.hongshu.web.domain.dto.CommentReplySummary">
+        SELECT pid, COUNT(*) AS reply_count FROM web_comment
+        WHERE pid IN
+        <foreach collection="parentIds" item="parentId" open="(" separator="," close=")">
+            #{parentId}
+        </foreach>
+        GROUP BY pid
+    </select>
+
+</mapper>
