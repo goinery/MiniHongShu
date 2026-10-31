@@ -1,4 +1,152 @@
-<template></template>
+<template>
+  <div class="container publish-page">
+    <div v-if="isLogin" v-loading="pushLoading" class="push-container" :element-loading-text="note.id ? '正在保存，请稍候' : '正在发布，请稍候'">
+      <header class="header">
+        <span class="header-icon"></span>
+        <h1 class="header-title">{{ note.id ? '编辑笔记' : '发布图文' }}</h1>
+      </header>
+
+      <div class="editor-layout">
+        <section class="media-section" aria-label="笔记图片">
+          <div class="field-heading">
+            <span class="section-label"><span class="required">*</span>图片</span>
+            <span class="field-count">{{ fileList.length }} / {{ MAX_NOTE_IMAGES }}</span>
+          </div>
+          <ul class="image-grid" :class="{ 'is-empty': !fileList.length }" aria-label="已选图片">
+            <li
+              v-for="(file, index) in fileList"
+              :key="file.uid"
+              class="image-card"
+              :class="{ 'is-dragging': draggedImageUid === file.uid, 'is-drop-target': dropImageUid === file.uid }"
+              :draggable="!pushLoading && fileList.length > 1"
+              tabindex="0"
+              aria-keyshortcuts="Alt+ArrowLeft Alt+ArrowRight"
+              @dragstart="startImageDrag($event, file)"
+              @dragover="overImageDrag($event, file)"
+              @drop="dropImage($event, file)"
+              @dragend="endImageDrag"
+              @keydown.alt.left.prevent="moveImage(index, index - 1)"
+              @keydown.alt.right.prevent="moveImage(index, index + 1)"
+            >
+              <button type="button" class="image-preview-button" :aria-label="'预览图片：' + file.name" @click="handlePreview(file)">
+                <img :src="file.url" :alt="file.name" draggable="false" />
+              </button>
+              <span v-if="fileList[0]?.uid === file.uid" class="cover-badge">封面</span>
+              <button v-else type="button" class="image-cover-button" :disabled="pushLoading" @click="setCover(file)">设为封面</button>
+              <button type="button" class="image-remove-button round-close" :aria-label="'移除图片：' + file.name" :disabled="pushLoading" @click.stop="removeImage(file)">
+                <el-icon><Close /></el-icon>
+              </button>
+            </li>
+            <li v-show="fileList.length < MAX_NOTE_IMAGES" class="image-upload-slot">
+              <el-upload
+                v-model:file-list="fileList"
+                class="gallery-upload"
+                list-type="picture-card"
+                multiple
+                :show-file-list="false"
+                :limit="MAX_NOTE_IMAGES"
+                accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+                :auto-upload="false"
+                :disabled="pushLoading"
+                :on-exceed="() => ElMessage.warning('最多上传 9 张图片')"
+              >
+                <div class="upload-plus">
+                  <el-icon :size="28"><Plus /></el-icon>
+                  <span>{{ fileList.length ? '继续添加' : '上传图片' }}</span>
+                </div>
+              </el-upload>
+            </li>
+          </ul>
+
+          <div class="image-link-field">
+            <label for="publish-image-url" class="section-label">图片链接</label>
+            <div class="image-url-input">
+              <el-input
+                id="publish-image-url"
+                v-model="imageUrl"
+                :prefix-icon="Link"
+                placeholder="粘贴图片链接"
+                clearable
+                :disabled="addingImage || pushLoading || fileList.length >= MAX_NOTE_IMAGES"
+                @keyup.enter.prevent="addImageUrl"
+              />
+              <el-button type="primary" :icon="Plus" aria-label="添加链接图片" :loading="addingImage" :disabled="pushLoading || fileList.length >= MAX_NOTE_IMAGES || !imageUrl.trim()" @click="addImageUrl" />
+            </div>
+            <p v-if="imageUrlError" class="image-url-error" role="alert">{{ imageUrlError }}</p>
+          </div>
+          <el-dialog v-model="dialogVisible" title="图片预览" width="min(640px, 92vw)" append-to-body>
+            <img class="preview-img" :src="dialogImageUrl" alt="预览" />
+          </el-dialog>
+        </section>
+
+        <section class="writing-section" aria-label="笔记内容">
+          <div class="field-block">
+            <label for="publish-title" class="section-label"><span class="required">*</span>标题</label>
+            <el-input id="publish-title" ref="TitleRef" v-model="note.title" maxlength="20" show-word-limit placeholder="填写标题会有更多赞哦" class="input-title" :disabled="pushLoading" />
+          </div>
+          <div class="field-block">
+            <label for="publish-content" class="section-label">正文</label>
+            <el-input id="publish-content" v-model="note.content" maxlength="250" show-word-limit :autosize="{ minRows: 7, maxRows: 12 }" type="textarea" placeholder="添加正文描述，让更多人看到你" :disabled="pushLoading" />
+          </div>
+
+          <div class="field-block">
+            <div class="field-heading">
+              <span class="section-label">标签</span>
+              <span class="field-count">{{ dynamicTags.length }} / 5</span>
+            </div>
+            <div class="tag-controls">
+              <HoverPopover id="publish-tags" ref="tagPicker" class="tag-picker" title="添加标签" :width="360" :disabled="pushLoading">
+                <template #trigger><el-icon><Plus /></el-icon><span>添加标签</span></template>
+                <div class="custom-tag-input">
+                  <el-input v-model="inputValue" maxlength="12" placeholder="输入标签名称" aria-label="自定义标签" clearable :disabled="dynamicTags.length >= 5" @keyup.enter.prevent="handleInputConfirm" />
+                  <el-button type="primary" :disabled="!inputValue.trim() || dynamicTags.length >= 5" @click="handleInputConfirm">添加</el-button>
+                </div>
+                <div v-if="hotTags.length" class="suggested-tags">
+                  <div class="popover-section-label">推荐标签</div>
+                  <div class="hot-tag">
+                    <button v-for="tag in hotTags" :key="tag" type="button" class="tag-option" :class="{ 'is-selected': dynamicTags.includes(tag) }" :aria-pressed="dynamicTags.includes(tag)" :disabled="dynamicTags.length >= 5 && !dynamicTags.includes(tag)" @click="selectHotTag(tag)">
+                      <el-icon v-if="dynamicTags.includes(tag)"><Check /></el-icon><span># {{ tag }}</span>
+                    </button>
+                  </div>
+                </div>
+              </HoverPopover>
+            </div>
+            <div v-if="dynamicTags.length" class="tag-list">
+              <el-tag v-for="tag in dynamicTags" :key="tag" :closable="!pushLoading" disable-transitions round effect="plain" type="primary" class="tag-item" @close="handleClose(tag)"># {{ tag }}</el-tag>
+            </div>
+          </div>
+
+          <div class="field-block categorys">
+            <span class="section-label"><span class="required">*</span>分类</span>
+            <HoverPopover id="publish-category" ref="categoryPicker" class="category-picker" title="选择分类" :width="360" :disabled="pushLoading" :pin-on-panel-interaction="false">
+              <template #trigger><el-icon><CollectionTag /></el-icon><span class="category-label" :title="categoryLabel">{{ categoryLabel }}</span></template>
+              <el-skeleton v-if="categoryLoading" :rows="3" animated />
+              <el-empty v-else-if="categoryFailed" :image-size="64" description="分类加载失败">
+                <el-button type="primary" plain @click="loadCategories">重新加载</el-button>
+              </el-empty>
+              <template v-else-if="options.length">
+                <el-cascader-panel v-model="categoryList" :options="options" :props="categoryProps" class="category-panel" />
+                <div v-if="categoryList.length" class="category-actions"><el-button type="primary" link @click="categoryList = []">清除选择</el-button></div>
+              </template>
+              <el-empty v-else :image-size="64" description="暂无可选分类" />
+            </HoverPopover>
+          </div>
+        </section>
+      </div>
+
+      <footer class="submit">
+        <span class="publish-summary">{{ fileList.length }} 张图片<span class="summary-dot">·</span>{{ dynamicTags.length }} 个标签</span>
+        <div class="submit-actions">
+          <el-button round :disabled="pushLoading" @click="resetData">清空</el-button>
+          <el-button type="primary" round :loading="pushLoading" :disabled="addingImage" @click="pubslish">{{ note.id ? '保存修改' : '发布笔记' }}</el-button>
+        </div>
+      </footer>
+    </div>
+    <div v-else class="push-guest">
+      <el-empty description="登录后即可发布笔记"><el-button type="primary" round @click="openLogin()">去登录</el-button></el-empty>
+    </div>
+  </div>
+</template>
 
 <script lang="ts" setup>
 import { ref, computed, nextTick, inject, onBeforeUnmount, watch } from "vue";
