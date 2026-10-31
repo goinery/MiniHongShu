@@ -522,4 +522,282 @@ onMounted(() => window.addEventListener("hongshu:logout", onSessionEnded));
 onUnmounted(() => window.removeEventListener("hongshu:logout", onSessionEnded));
 </script>
 
-<style lang="less" scoped></style>
+<style lang="less" scoped>
+a {
+  text-decoration: none;
+  color: rgba(51, 51, 51, 0.8);
+}
+
+/* 添加选中标签的效果 */
+.channel-list li:hover,
+.information-wrapper:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+  cursor: pointer;
+}
+
+/* 浮动框容器 */
+.floating-box {
+  background-color: #f9f9f9;
+  border-radius: 10px;
+  padding: 20px; /* 调整内边距 */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  max-width: 300px; /* 调整宽度 */
+  margin: 0 auto 0 -2px; /* 保留左侧 -2px 偏移 */
+  cursor: pointer;
+  width: 90%;
+}
+
+/* 标题样式 */
+.title {
+  font-size: 14px;
+  font-weight: bold;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+/* 行容器样式 */
+.line-container {
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+}
+
+/* 图标样式 */
+.reds-icon {
+  fill: var(--el-color-primary); /* 图标颜色 */
+  margin-right: 10px;
+}
+
+/* 描述文本样式 */
+.desc {
+  font-size: 13px;
+  color: #666;
+}
+
+.custom-button {
+  height: 48px;
+  background: var(--el-color-primary);
+  color: var(--brand-color-contrast);
+  border-radius: 999px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+}
+
+.container {
+  --sidebar-expanded-width: 0px;
+  --sidebar-icon-size: 22px;
+  --sidebar-rail-width: 64px;
+  --sidebar-gap: 0px;
+  --sidebar-layout-width: var(--sidebar-expanded-width);
+  --more-button-width: 90%;
+  --more-button-height: 48px;
+  --more-icon-size: 22px;
+  --more-text-size: 16px;
+
+  @media screen and (min-width: 960px) and (max-width: 1191px) {
+    --sidebar-expanded-width: calc(-18px + 25vw);
+    --sidebar-gap: 12px;
+  }
+
+  @media screen and (min-width: 1192px) and (max-width: 1423px) {
+    --sidebar-expanded-width: calc(-16.8px + 20vw);
+    --sidebar-gap: 12px;
+  }
+
+  @media screen and (min-width: 1424px) and (max-width: 1727px) {
+    --sidebar-expanded-width: calc(-21.33333px + 16.66667vw);
+    --sidebar-gap: 16px;
+  }
+
+  @media screen and (min-width: 1728px) {
+    --sidebar-expanded-width: 266.66667px;
+    --sidebar-gap: 16px;
+  }
+
+  &.sidebar-collapsed {
+    @media screen and (min-width: 960px) {
+      --sidebar-layout-width: var(--sidebar-rail-width);
+    }
+  }
+
+  max-width: 1728px;
+  background-color: #fff;
+  margin: 0 auto;
+
+  .top {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: 100vw;
+    height: 72px;
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: var(--layer-navigation);
+    align-items: center;
+    background: #fff;
+
+    header {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      // 与主内容容器保持相同的页面外边距。
+      width: calc(100% - 16px);
+      max-width: 1728px;
+      height: 72px;
+      padding: 0 var(--page-inline-padding) 0 16px;
+      z-index: var(--layer-local-content);
+
+      @media screen and (min-width: 960px) {
+        // 对齐侧栏 16px 内边距加 22px 图标的中心。
+        padding-left: calc(var(--sidebar-gap) + 3px);
+      }
+
+      .brand-navigation {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+        max-width: clamp(112px, calc(25vw - 40px), 260px);
+      }
+
+      .sidebar-toggle {
+        display: inline-flex;
+        flex: 0 0 48px;
+        align-items: center;
+        justify-content: center;
+        width: 48px;
+        height: 48px;
+        padding: 12px;
+        border: 1px solid transparent;
+        border-radius: 999px;
+        color: var(--el-text-color-regular);
+        cursor: pointer;
+        transition: background-color 160ms, color 160ms, border-color 160ms;
+
+        svg {
+          width: calc(var(--sidebar-icon-size));
+          height: calc(var(--sidebar-icon-size));
+          flex-shrink: 0;
+        }
+
+        &:hover {
+          color: var(--el-color-primary);
+          background: var(--el-color-primary-light-9);
+          border-color: var(--el-color-primary-light-7);
+        }
+
+        &:focus-visible {
+          outline: 2px solid var(--el-color-primary);
+          outline-offset: 2px;
+        }
+
+        @media screen and (max-width: 959px) {
+          display: none;
+        }
+      }
+
+      .logo-wrap {
+        display: flex;
+        align-items: center;
+        flex-shrink: 1;
+        min-width: 0;
+        max-width: clamp(80px, 20vw, 220px);
+        text-decoration: none;
+
+        .logo {
+          display: block;
+          min-width: 0;
+          color: var(--el-color-primary);
+          font-size: 28px;
+          font-weight: 750;
+          line-height: 1.25;
+          letter-spacing: 0.04em;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+      }
+
+      .right {
+        display: flex;
+        align-items: center;
+        flex-shrink: 0;
+        margin-left: auto;
+        justify-content: flex-end;
+      }
+
+      .input-box {
+        height: 40px;
+        position: fixed;
+        left: 50%;
+        transform: translate(-50%);
+
+        @media screen and (max-width: 695px) {
+          display: none;
+        }
+
+        @media screen and (min-width: 960px) and (max-width: 1191px) {
+          width: calc(-36px + 50vw);
+        }
+
+        @media screen and (min-width: 1192px) and (max-width: 1423px) {
+          width: calc(-33.6px + 40vw);
+        }
+
+        @media screen and (min-width: 1424px) and (max-width: 1727px) {
+          width: calc(-42.66667px + 33.33333vw);
+        }
+
+        @media screen and (min-width: 1728px) {
+          width: 533.33333px;
+        }
+
+        .search-input {
+          padding: 0 84px 0 16px;
+          width: 100%;
+          height: 100%;
+          font-size: 16px;
+          line-height: 120%;
+          color: #333;
+          caret-color: var(--el-color-primary);
+          background: rgba(0, 0, 0, 0.03);
+          border-radius: 999px;
+        }
+
+        .input-button {
+          position: absolute;
+          right: 0;
+          top: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          height: 100%;
+          color: rgba(51, 51, 51, 0.8);
+
+          .close-icon .search-icon {
+            width: 40px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: rgba(51, 51, 51, 0.8);
+          }
+          :hover {
+            cursor: pointer; /* 显示小手指针 */
+            transform: scale(1.15); /* 鼠标移入时按钮稍微放大 */
+          }
+        }
+      }
+    }
+  }
+
+  .main {
+    display: flex;
+}
+}
+</style>
