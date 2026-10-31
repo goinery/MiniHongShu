@@ -1,4 +1,216 @@
-<template></template>
+<template>
+  <div class="app-container business-page">
+    <BusinessPageHeader title="笔记管理" :count="total" />
+    <el-form class="business-filter"
+      :model="queryParams"
+      ref="queryRef"
+      :inline="true"
+      v-show="showSearch"
+    >
+      <el-form-item label="分类" prop="pid">
+        <el-tree-select
+          v-model="queryParams.pid"
+          :data="navbarOptions"
+          :props="{
+            value: 'id',
+            label: 'title',
+            children: 'children',
+            disabled: 'disabled',
+          }"
+          value-key="id"
+          placeholder="请选择分类"
+          check-strictly
+          clearable
+          style="width: 200px"
+          @change="handleQuery"
+        />
+      </el-form-item>
+      <el-form-item label="标题" prop="title">
+        <el-input
+          v-model="queryParams.title"
+          placeholder="请输入标题"
+          clearable
+          style="width: 200px"
+          @keyup.enter="handleQuery"
+        />
+      </el-form-item>
+      <el-form-item label="作者" prop="uid">
+        <el-input
+          v-model="queryParams.uid"
+          placeholder="请输入作者ID"
+          clearable
+          style="width: 200px"
+          @keyup.enter="handleQuery"
+        />
+      </el-form-item>
+      <el-form-item label="类型" prop="noteType">
+        <el-select
+          v-model="queryParams.noteType"
+          placeholder="笔记类型"
+          @change="handleQuery"
+          clearable
+          style="width: 200px"
+        >
+          <el-option
+            v-for="dict in note_type"
+            :key="dict.value"
+            :label="dict.label"
+            :value="dict.value"
+          />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="状态" prop="auditStatus">
+        <el-select
+          v-model="queryParams.auditStatus"
+          placeholder="笔记状态"
+          @change="handleQuery"
+          clearable
+          style="width: 200px"
+        >
+          <el-option
+            v-for="dict in audit_status"
+            :key="dict.value"
+            :label="dict.label"
+            :value="dict.value"
+          />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="创建时间" style="width: 308px">
+        <el-date-picker
+          v-model="dateRange"
+          value-format="YYYY-MM-DD"
+          type="daterange"
+          range-separator="-"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+        >
+        </el-date-picker>
+      </el-form-item>
+      <el-form-item>
+        <el-button type="primary" icon="Search" @click="handleQuery">
+          搜索
+        </el-button>
+        <el-button icon="Refresh" @click="resetQuery">重置 </el-button>
+      </el-form-item>
+    </el-form>
+
+    <el-row :gutter="10" class="mb8 business-toolbar">
+      <el-col :span="1.5">
+        <el-button
+          type="primary"
+          plain
+          icon="Plus"
+          @click="handleAdd"
+          v-hasPermi="['web:note:add']"
+        >
+          新增
+        </el-button>
+      </el-col>
+      <el-col :span="1.5">
+        <el-button
+          type="primary"
+          plain
+          icon="Edit"
+          :disabled="single"
+          @click="handleUpdate"
+          v-hasPermi="['web:note:edit']"
+        >
+          修改
+        </el-button>
+      </el-col>
+      <el-col :span="1.5">
+        <el-button
+          type="danger"
+          plain
+          icon="Delete"
+          :disabled="multiple"
+          @click="handleDelete"
+          v-hasPermi="['web:note:remove']"
+        >
+          删除
+        </el-button>
+      </el-col>
+      <el-col :span="1.5">
+        <el-button
+          type="primary"
+          plain
+          icon="Download"
+          @click="handleExport"
+          v-hasPermi="['web:note:export']"
+        >
+          导出
+        </el-button>
+      </el-col>
+      <right-toolbar v-model:showSearch="showSearch" @queryTable="getList">
+      </right-toolbar>
+    </el-row>
+
+    <el-table class="business-table"
+      v-loading="loading"
+      :data="noteList"
+      @selection-change="handleSelectionChange"
+    >
+      <el-table-column type="selection" width="55" align="center" />
+      <el-table-column label="序号" align="center" prop="id" width="80" />
+      <el-table-column
+        label="分类"
+        align="center"
+        prop="cpid"
+        width="110"
+        :formatter="categoryFormatter"
+        show-overflow-tooltip
+      />
+      <el-table-column
+        label="标题"
+        align="left"
+        prop="title"
+        min-width="160"
+        show-overflow-tooltip
+      />
+      <el-table-column label="作者" align="center" prop="author" width="110" show-overflow-tooltip />
+      <el-table-column label="封面" align="center" prop="noteCover" width="80">
+        <template #default="scope">
+          <el-image
+            v-if="scope.row.noteCover"
+            class="cover-thumb"
+            :src="scope.row.noteCover"
+            :preview-src-list="[scope.row.noteCover]"
+            fit="cover"
+            preview-teleported
+          />
+          <span v-else>—</span>
+        </template>
+      </el-table-column>
+      <el-table-column
+        label="内容"
+        align="left"
+        prop="content"
+        min-width="180"
+        show-overflow-tooltip
+      />
+      <el-table-column label="图片" align="center" prop="count" width="70" />
+      <!-- <el-table-column label="排序" align="center" prop="sort" /> -->
+      <el-table-column label="是否置顶" align="center" prop="pinned">
+        <template #default="scope">
+          <dict-tag :options="pinned" :value="scope.row.pinned" />
+        </template>
+      </el-table-column>
+      <el-table-column label="状态" align="center" prop="auditStatus">
+        <template #default="scope">
+          <dict-tag :options="audit_status" :value="scope.row.auditStatus" />
+        </template>
+      </el-table-column>
+      <el-table-column label="类型" align="center" prop="noteType">
+        <template #default="scope">
+          <dict-tag :options="note_type" :value="displayNoteType(scope.row.noteType)" />
+        </template>
+      </el-table-column>
+      <el-table-column label="浏览次数" align="center" prop="viewCount" />
+      <el-table-column label="点赞次数" align="center" prop="likeCount" />
+      <el-table-column label="收藏次数" align="center" prop="collectionCount" />
+      <el-table-column label="评论次数" align="center" prop="commentCount" />
+    </el-table>
+  </div></template>
 
 <script setup>
 import { Plus } from '@element-plus/icons-vue'
