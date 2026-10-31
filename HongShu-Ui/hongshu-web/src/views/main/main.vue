@@ -1,4 +1,150 @@
-<template></template>
+<template>
+  <div class="note-detail-mask" @click.self="close">
+    <div class="note-container">
+      <div class="media-container">
+        <el-carousel height="90vh" :autoplay="false">
+          <el-carousel-item v-for="(item, index) in noteInfo.imgList" :key="index">
+            <el-image
+              style="width: 100%; height: 100%"
+              :src="item"
+              fit="contain"
+              class="animate__animated animate__zoomIn animate__delay-0.5s"
+            />
+          </el-carousel-item>
+        </el-carousel>
+      </div>
+
+      <div class="interaction-container">
+        <div class="author-container">
+          <div class="author-me">
+            <RouterLink class="info author-link" :to="{ name: 'user', query: { uid: noteInfo.uid } }">
+              <img alt="用户头像" class="avatar-item author-link__avatar" style="width: 40px; height: 40px" :src="noteInfo.avatar" />
+              <span class="name author-link__name">{{ noteInfo.username }}</span>
+            </RouterLink>
+            <div class="follow-btn" v-if="currentUid !== noteInfo.uid">
+              <el-button
+                class="note-follow-button"
+                :class="{ 'followed-button': noteInfo.isFollow }"
+                type="primary"
+                :plain="noteInfo.isFollow"
+                round
+                :aria-label="(noteInfo.isFollow ? '取消关注' : '关注') + noteInfo.username"
+                :aria-pressed="noteInfo.isFollow"
+                @click="follow(noteInfo.uid, noteInfo.isFollow ? 1 : 0)"
+              >
+                {{ noteInfo.isFollow ? '取消关注' : '关注' }}
+              </el-button>
+            </div>
+            <div class="follow-btn" v-else>
+              <el-dropdown @command="onOwnerCommand">
+                <el-button type="danger" size="large" round>
+                  编辑
+                  <el-icon class="el-icon--right">
+                    <arrow-down />
+                  </el-icon>
+                </el-button>
+                <template #dropdown>
+                  <el-dropdown-menu>
+                    <el-dropdown-item v-if="noteInfo.pinned === '0'" command="pin">置顶</el-dropdown-item>
+                    <el-dropdown-item v-else command="unpin">取消置顶</el-dropdown-item>
+                    <el-dropdown-item command="delete">删除</el-dropdown-item>
+                    <el-dropdown-item command="edit">编辑</el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
+            </div>
+          </div>
+
+          <div class="note-scroller" ref="noteScroller" @scroll="loadMoreData">
+            <div class="note-content">
+              <div class="title">{{ noteInfo.title }}</div>
+              <div class="desc">
+                <span>{{ noteInfo.content }} <br /></span>
+                <a class="tag tag-search" v-for="(item, index) in noteInfo.tagList" :key="index">#{{ item.title }}</a>
+              </div>
+              <div class="bottom-container">
+                <span class="date">{{ noteInfo.time }}</span>
+              </div>
+            </div>
+            <div class="divider interaction-divider"></div>
+
+            <!-- 评论 -->
+            <div class="comments-el">
+              <Comment
+                :nid="props.nid"
+                :note-uid="noteInfo.uid"
+                :currentPage="currentPage"
+                :replyComment="replyComment"
+                :seed="seed"
+                @click-comment="clickComment"
+              >
+              </Comment>
+            </div>
+            <!--  -->
+          </div>
+
+          <div class="interactions-footer">
+            <div class="buttons">
+              <div class="left">
+                <button
+                  type="button"
+                  class="like-wrapper interaction-action"
+                  :aria-label="noteInfo.isCollection ? '取消收藏' : '收藏'"
+                  :aria-pressed="noteInfo.isCollection"
+                  @click="toggleCollection()"
+                >
+                  <StarFilled v-if="noteInfo.isCollection" style="width: 24px; height: 24px; flex-shrink: 0; color: #ffcc00" />
+                  <Star v-else class="action-icon" />
+                  <span class="count">{{ noteInfo.collectionCount }}</span>
+                </button>
+                <NoteLikeButton
+                  class="collect-wrapper interaction-action"
+                  style="--note-like-icon-size: 24px"
+                  :note-id="noteInfo.id"
+                  :author-id="noteInfo.uid"
+                  :is-like="noteInfo.isLike"
+                  :like-count="noteInfo.likeCount"
+                />
+                <span class="chat-wrapper interaction-action">
+                  <ChatRound class="action-icon" />
+                  <span class="count">
+                    {{ noteInfo.commentCount }}
+                  </span>
+                </span>
+              </div>
+              <div class="share-wrapper"></div>
+            </div>
+            <div :class="showSaveBtn ? 'comment-wrapper active comment-comp ' : 'comment-wrapper comment-comp '">
+              <div class="input-wrapper">
+                <input
+                  ref="commentInput"
+                  class="comment-input"
+                  v-model="commentValue"
+                  type="text"
+                  :placeholder="commentPlaceVal"
+                  @input="commenInput"
+                  @keyup.enter="saveComment"
+                />
+                <div class="input-buttons round-close" @click="clearCommeent" v-show="showSaveBtn">
+                  <Close style="width: 1.2em; height: 1.2em" />
+                </div>
+              </div>
+              <button class="submit" @click="saveComment">发送</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="close-cricle" @click="close">
+      <div class="close close-mask-white round-close">
+        <Close style="width: 1.2em; height: 1.2em; color: rgba(51, 51, 51, 0.8)" />
+      </div>
+    </div>
+
+    <div class="back-desk" @click.self="close"></div>
+  </div>
+</template>
 
 <script lang="ts" setup>
 import { Close, Star, ChatRound, StarFilled, ArrowDown } from "@element-plus/icons-vue";
