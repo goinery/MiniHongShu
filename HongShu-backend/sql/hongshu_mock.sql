@@ -1121,3 +1121,216 @@ INSERT INTO sys_role_dept (role_id, dept_id) VALUES (2, 100), (2, 101), (2, 105)
 INSERT INTO t_system_config (uid, status, create_time, update_time, start_email_notification,
                             editor_model, open_dashboard_notification, open_email_activate, search_model)
 VALUES ('mock-system-config', 1, @mock_now, @mock_now, '0', '0', '0', '0', '0');
+
+-- 集合式批量造数。临时序列表只在本次连接存在，生成过程执行后删除。
+DELIMITER $$
+CREATE PROCEDURE hongshu_generate_mock_data()
+BEGIN
+    DECLARE image_index INT DEFAULT 2;
+    DECLARE root_comments INT;
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        DROP TEMPORARY TABLE IF EXISTS mock_numbers;
+        RESIGNAL;
+    END;
+
+    IF CAST(@mock_users AS CHAR) NOT REGEXP '^[0-9]+$' OR @mock_users < 2 OR @mock_users > 10000
+       OR CAST(@mock_notes AS CHAR) NOT REGEXP '^[0-9]+$' OR @mock_notes < 1 OR @mock_notes > 10000
+       OR CAST(@mock_comments AS CHAR) NOT REGEXP '^[0-9]+$' OR @mock_comments < 0 OR @mock_comments > 100000 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid mock counts: users 2..10000, notes 1..10000, comments 0..100000';
+    END IF;
+    IF @mock_seed NOT REGEXP '^[A-Za-z0-9_-]{1,64}$' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'mock_seed must contain 1..64 ASCII letters, digits, underscores or hyphens';
+    END IF;
+    SET root_comments = CEIL(@mock_comments * 0.75);
+
+    DROP TEMPORARY TABLE IF EXISTS mock_numbers;
+    CREATE TEMPORARY TABLE mock_numbers (n INT PRIMARY KEY) ENGINE=MEMORY;
+    INSERT INTO mock_numbers (n)
+    SELECT a.d + b.d * 10 + c.d * 100 + d.d * 1000 + e.d * 10000 + 1 AS n
+    FROM JSON_TABLE('[0,1,2,3,4,5,6,7,8,9]', '$[*]' COLUMNS (d INT PATH '$')) a
+    CROSS JOIN JSON_TABLE('[0,1,2,3,4,5,6,7,8,9]', '$[*]' COLUMNS (d INT PATH '$')) b
+    CROSS JOIN JSON_TABLE('[0,1,2,3,4,5,6,7,8,9]', '$[*]' COLUMNS (d INT PATH '$')) c
+    CROSS JOIN JSON_TABLE('[0,1,2,3,4,5,6,7,8,9]', '$[*]' COLUMNS (d INT PATH '$')) d
+    CROSS JOIN JSON_TABLE('[0,1,2,3,4,5,6,7,8,9]', '$[*]' COLUMNS (d INT PATH '$')) e
+    WHERE a.d + b.d * 10 + c.d * 100 + d.d * 1000 + e.d * 10000 < GREATEST(@mock_users, @mock_notes, @mock_comments, 731);
+
+    START TRANSACTION;
+
+    INSERT INTO sys_date (id, date_time, date_string)
+    SELECT n, DATE_ADD(DATE(@mock_now), INTERVAL (n - 366) DAY),
+           DATE_FORMAT(DATE_ADD(DATE(@mock_now), INTERVAL (n - 366) DAY), '%Y-%m-%d')
+    FROM mock_numbers WHERE n <= 731 ORDER BY n;
+
+    INSERT INTO web_navbar (id, title, pid, sort, like_count, description, normal_cover, hot_cover, status, creator, create_time, update_time)
+    SELECT seq.n, ELT(seq.n, '生活', '旅行', '美食', '摄影'), 0, seq.n, 0, '测试数据分类',
+           CONCAT('https://picsum.photos/seed/', @mock_seed, '-category-', seq.n, '/600/400'),
+           CONCAT('https://picsum.photos/seed/', @mock_seed, '-category-hot-', seq.n, '/600/400'), 0, 'mock', @mock_now, @mock_now
+    FROM mock_numbers seq WHERE seq.n <= 4 ORDER BY seq.n;
+    INSERT INTO web_navbar (id, title, pid, sort, like_count, description, normal_cover, hot_cover, status, creator, create_time, update_time)
+    SELECT 100 + n, ELT(n, '日常记录', '家居好物', '城市漫游', '山野露营', '家庭料理', '咖啡甜点', '街头光影', '自然风景'),
+           CEIL(n / 2), n, 0, '可用于分类筛选的测试笔记',
+           CONCAT('https://picsum.photos/seed/', @mock_seed, '-subcategory-', n, '/600/400'),
+           CONCAT('https://picsum.photos/seed/', @mock_seed, '-subcategory-hot-', n, '/600/400'), 0, 'mock', @mock_now, @mock_now
+    FROM mock_numbers WHERE n <= 8 ORDER BY n;
+
+    INSERT INTO web_tag (id, title, like_count, sort, creator, create_time, update_time)
+    SELECT seq.n, ELT(seq.n, '日常记录', '家居好物', '城市漫游', '山野露营', '家庭料理', '咖啡甜点', '街头光影', '自然风景',
+                        '周末计划', '生活灵感', '今日分享', '慢慢生活'), 0, seq.n, 'mock', @mock_now, @mock_now
+    FROM mock_numbers seq WHERE seq.n <= 12 ORDER BY seq.n;
+
+    INSERT INTO web_user (id, hs_id, username, password, avatar, gender, phone, email, tags, description, status,
+                          birthday, address, trend_count, follower_count, fan_count, creator, create_time, update_time, remark)
+    SELECT n, 8000000000 + n,
+           CONCAT(ELT(1 + MOD(n - 1, 10), '小林', '阿橙', '木木', '小鹿', '南风', '山茶', '青禾', '小满', '星野', '云朵'), LPAD(n, 5, '0')),
+           '$2b$10$bz3E4zxNGxvSQOmti8xs1.uWNEI1uOsq5u3pjsD3iAoQM25ag6jta',
+           CONCAT('https://picsum.photos/seed/', @mock_seed, '-user-', n, '/200/200'), MOD(n, 3),
+           CAST(10000000000 + n AS CHAR), CONCAT('demo', n, '@example.com'), '生活,旅行,摄影',
+           CONCAT('这是第 ', n, ' 位测试会员，喜欢记录生活里的小发现。'), 0,
+           DATE_FORMAT(DATE_ADD('1990-01-01', INTERVAL MOD(n * 37, 6000) DAY), '%Y-%m-%d'),
+           ELT(1 + MOD(n - 1, 6), '上海', '杭州', '成都', '北京', '广州', '南京'), 0, 0, 0, 'mock',
+           DATE_SUB(@mock_now, INTERVAL (120 + MOD(n, 30)) DAY), DATE_SUB(@mock_now, INTERVAL (120 + MOD(n, 30)) DAY),
+           CONCAT('测试数据：', @mock_seed)
+    FROM mock_numbers WHERE n <= @mock_users ORDER BY n;
+
+    -- 每篇 1..6 张图；封面尺寸为 800x600 / 800x800 / 800x1000。
+    -- note_cover_height 是前端 240px 宽卡片的显示高度，而不是原图像素高度。
+    INSERT INTO web_note (id, title, content, note_cover, note_cover_height, album_id, uid, author, cid, cpid,
+                          urls, count, sort, pinned, status, audit_status, note_type, like_count, collection_count,
+                          comment_count, view_count, time, creator, create_time, update_time)
+    SELECT s.n,
+           CONCAT(ELT(1 + MOD(s.n - 1, 8), '把普通日子过得有趣', '让房间更舒服的小改变', '周末城市散步路线', '山野露营的一天',
+                       '下班后的简单晚餐', '发现一家安静的咖啡店', '记录街角的光与影', '把自然风景装进相册'), ' · ', s.n),
+           CONCAT('<p>', ELT(1 + MOD(s.n - 1, 8), '今天留了一点时间给自己，记录几个平凡又开心的瞬间。',
+                       '整理了书桌和窗边的小角落，空间清爽了，心情也放松了。', '沿着熟悉的街道慢慢走，发现了平时忽略的店铺与风景。',
+                       '带上简单装备去山野走走，在树荫下吃午饭，听风经过。', '用冰箱里常见的食材做一顿热饭，简单搭配也很满足。',
+                       '点一杯咖啡，翻几页书，把周末下午留给自己。', '傍晚的光线很柔和，随手记录街头的小细节。',
+                       '远处的山和近处的树都有不同的颜色，值得停下来看看。'),
+                       '</p><p>这是一篇用于列表、详情、搜索和互动测试的模拟笔记。图片由 Picsum 提供，与文字主题不一定对应。</p>'),
+           CONCAT('https://picsum.photos/seed/', @mock_seed, '-note-', s.n, '-1/800/', ELT(1 + MOD(s.n - 1, 3), '600', '800', '1000')),
+           ELT(1 + MOD(s.n - 1, 3), 180, 240, 300), CAST(u.id AS CHAR), CAST(u.id AS CHAR), u.username,
+           CAST(101 + MOD(s.n - 1, 8) AS CHAR), CAST(1 + FLOOR(MOD(s.n - 1, 8) / 2) AS CHAR),
+           JSON_ARRAY(CONCAT('https://picsum.photos/seed/', @mock_seed, '-note-', s.n, '-1/800/', ELT(1 + MOD(s.n - 1, 3), '600', '800', '1000'))),
+           1 + MOD(s.n - 1, 6), 0, 0, 1, 1, 1, 0, 0, 0, 100 + MOD(s.n * 7919, 20000),
+           CAST(CAST(UNIX_TIMESTAMP(DATE_SUB(@mock_now, INTERVAL (1 + MOD(s.n * 13, 90)) DAY)) * 1000 AS UNSIGNED) AS CHAR),
+           'mock', DATE_SUB(@mock_now, INTERVAL (1 + MOD(s.n * 13, 90)) DAY), DATE_SUB(@mock_now, INTERVAL (1 + MOD(s.n * 13, 90)) DAY)
+    FROM mock_numbers s JOIN web_user u ON u.id = 1 + MOD(s.n - 1, @mock_users)
+    WHERE s.n <= @mock_notes ORDER BY s.n;
+    WHILE image_index <= 6 DO
+        UPDATE web_note SET urls = JSON_ARRAY_APPEND(urls, '$',
+            CONCAT('https://picsum.photos/seed/', @mock_seed, '-note-', id, '-', image_index, '/800/',
+                   ELT(1 + MOD(id + image_index - 2, 3), '600', '800', '1000')))
+        WHERE count >= image_index;
+        SET image_index = image_index + 1;
+    END WHILE;
+
+    INSERT INTO web_user_note_relation (nid, uid, creator, create_time, update_time)
+    SELECT id, uid, 'mock', create_time, update_time FROM web_note ORDER BY id;
+    INSERT INTO web_tag_note_relation (nid, tid, creator, create_time, update_time)
+    SELECT id, 1 + MOD(id - 1, 8), 'mock', create_time, update_time FROM web_note ORDER BY id;
+    INSERT INTO web_tag_note_relation (nid, tid, creator, create_time, update_time)
+    SELECT id, 9 + MOD(id - 1, 4), 'mock', create_time, update_time FROM web_note ORDER BY id;
+    UPDATE web_tag t SET like_count = (SELECT COUNT(*) FROM web_tag_note_relation r WHERE r.tid = t.id);
+
+    INSERT INTO web_album (id, title, uid, album_cover, type, sort, img_count, collection_count, creator, create_time, update_time)
+    SELECT u.id, CONCAT(u.username, '的生活相册'), u.id,
+           CONCAT('https://picsum.photos/seed/', @mock_seed, '-album-', u.id, '/800/800'), 0, 0, 0, 0, 'mock',
+           DATE_ADD(u.create_time, INTERVAL 1 DAY), DATE_ADD(u.create_time, INTERVAL 1 DAY) FROM web_user u ORDER BY u.id;
+    INSERT INTO web_album_note_relation (aid, nid, sort, creator, create_time, update_time)
+    SELECT CAST(uid AS UNSIGNED), id, FLOOR((id - 1) / @mock_users), 'mock', create_time, update_time FROM web_note ORDER BY id;
+    UPDATE web_album a SET img_count = (SELECT COUNT(*) FROM web_album_note_relation r WHERE r.aid = a.id),
+        album_cover = COALESCE((SELECT n.note_cover FROM web_album_note_relation r JOIN web_note n ON n.id = r.nid
+                               WHERE r.aid = a.id ORDER BY r.sort, r.id LIMIT 1), a.album_cover);
+
+    -- 一级评论和回复共 mock_comments 条；回复引用同篇笔记下已存在的一级评论。
+    INSERT INTO web_comment (id, nid, note_uid, uid, pid, reply_id, reply_uid, level, sort, content,
+                             like_count, two_comment_count, creator, create_time, update_time)
+    SELECT s.n, n.id, n.uid, 1 + MOD(s.n + FLOOR((s.n - 1) / @mock_notes), @mock_users), 0, 0, 0, 1, 0,
+           ELT(1 + MOD(s.n - 1, 8), '这个角度拍得很好看！', '已经收藏，下次也来试试。', '看完很有共鸣，感谢分享。',
+               '周末就按这个思路安排。', '喜欢这种简单舒服的感觉。', '细节记录得很用心。', '有空也想去走走。', '期待你的下一篇分享。'),
+           0, 0, 'mock', DATE_ADD(n.create_time, INTERVAL (60 + MOD(s.n * 17, 43200)) SECOND),
+           DATE_ADD(n.create_time, INTERVAL (60 + MOD(s.n * 17, 43200)) SECOND)
+    FROM mock_numbers s JOIN web_note n ON n.id = 1 + MOD(s.n - 1, @mock_notes)
+    WHERE s.n <= root_comments ORDER BY s.n;
+    INSERT INTO web_comment (id, nid, note_uid, uid, pid, reply_id, reply_uid, level, sort, content,
+                             like_count, two_comment_count, creator, create_time, update_time)
+    SELECT root_comments + s.n, p.nid, p.note_uid, 1 + MOD(p.uid, @mock_users), p.id, p.id, p.uid, 2, 0,
+           ELT(1 + MOD(s.n - 1, 4), '谢谢喜欢，一起记录生活！', '有机会可以试试看。', '下次再分享更多细节。', '很开心遇到同样喜欢这些的人。'),
+           0, 0, 'mock', DATE_ADD(p.create_time, INTERVAL 10 MINUTE), DATE_ADD(p.create_time, INTERVAL 10 MINUTE)
+    FROM mock_numbers s JOIN web_comment p ON p.id = 1 + MOD(s.n - 1, NULLIF(root_comments, 0))
+    WHERE s.n <= @mock_comments - root_comments ORDER BY s.n;
+    UPDATE web_comment p LEFT JOIN (SELECT pid, COUNT(*) AS total FROM web_comment WHERE pid <> 0 GROUP BY pid) r ON r.pid = p.id
+    SET p.two_comment_count = COALESCE(r.total, 0);
+
+    -- 各笔记生成 1..8 个不重复点赞、1..3 个收藏（受会员数限制），不生成自关注。
+    INSERT INTO web_like_or_collect (uid, like_or_collection_id, publish_uid, type, timestamp, creator, create_time, update_time)
+    SELECT 1 + MOD(CAST(n.uid AS UNSIGNED) - 1 + s.n, @mock_users), n.id, n.uid, 1,
+           UNIX_TIMESTAMP(DATE_ADD(n.create_time, INTERVAL s.n HOUR)) * 1000, 'mock',
+           DATE_ADD(n.create_time, INTERVAL s.n HOUR), DATE_ADD(n.create_time, INTERVAL s.n HOUR)
+    FROM web_note n JOIN mock_numbers s ON s.n <= LEAST(@mock_users - 1, 1 + MOD(n.id, 8)) ORDER BY n.id, s.n;
+    INSERT INTO web_like_or_collect (uid, like_or_collection_id, publish_uid, type, timestamp, creator, create_time, update_time)
+    SELECT 1 + MOD(CAST(n.uid AS UNSIGNED) - 1 + s.n, @mock_users), n.id, n.uid, 3,
+           UNIX_TIMESTAMP(DATE_ADD(n.create_time, INTERVAL s.n HOUR)) * 1000, 'mock',
+           DATE_ADD(n.create_time, INTERVAL s.n HOUR), DATE_ADD(n.create_time, INTERVAL s.n HOUR)
+    FROM web_note n JOIN mock_numbers s ON s.n <= LEAST(@mock_users - 1, 1 + MOD(n.id, 3)) ORDER BY n.id, s.n;
+    INSERT INTO web_like_or_collect (uid, like_or_collection_id, publish_uid, type, timestamp, creator, create_time, update_time)
+    SELECT 1 + MOD(uid, @mock_users), id, uid, 2, UNIX_TIMESTAMP(DATE_ADD(create_time, INTERVAL 15 MINUTE)) * 1000,
+           'mock', DATE_ADD(create_time, INTERVAL 15 MINUTE), DATE_ADD(create_time, INTERVAL 15 MINUTE)
+    FROM web_comment WHERE MOD(id, 3) = 0 ORDER BY id;
+    INSERT INTO web_like_or_collect (uid, like_or_collection_id, publish_uid, type, timestamp, creator, create_time, update_time)
+    SELECT 1 + MOD(CAST(uid AS UNSIGNED), @mock_users), id, uid, 4, UNIX_TIMESTAMP(@mock_now) * 1000,
+           'mock', @mock_now, @mock_now FROM web_album ORDER BY id;
+    INSERT INTO web_follow (uid, fid, type, creator, create_time, update_time)
+    SELECT u.id, 1 + MOD(u.id - 1 + s.n, @mock_users), 1, 'mock', DATE_SUB(@mock_now, INTERVAL 91 DAY), DATE_SUB(@mock_now, INTERVAL 91 DAY)
+    FROM web_user u JOIN mock_numbers s ON s.n <= LEAST(@mock_users - 1, 1 + MOD(u.id, 5)) ORDER BY u.id, s.n;
+
+    -- 汇总数全部来自关联记录，避免页面数字与实际列表不一致。
+    UPDATE web_note n
+    LEFT JOIN (SELECT like_or_collection_id AS nid, SUM(type = 1) AS likes, SUM(type = 3) AS collects
+               FROM web_like_or_collect WHERE type IN (1, 3) GROUP BY like_or_collection_id) r ON r.nid = n.id
+    LEFT JOIN (SELECT nid, COUNT(*) AS total FROM web_comment GROUP BY nid) c ON c.nid = n.id
+    SET n.like_count = COALESCE(r.likes, 0), n.collection_count = COALESCE(r.collects, 0), n.comment_count = COALESCE(c.total, 0);
+    UPDATE web_comment c
+    LEFT JOIN (SELECT like_or_collection_id AS cid, COUNT(*) AS total FROM web_like_or_collect WHERE type = 2 GROUP BY like_or_collection_id) r ON r.cid = c.id
+    SET c.like_count = COALESCE(r.total, 0);
+    UPDATE web_album a
+    LEFT JOIN (SELECT like_or_collection_id AS aid, COUNT(*) AS total FROM web_like_or_collect WHERE type = 4 GROUP BY like_or_collection_id) r ON r.aid = a.id
+    SET a.collection_count = COALESCE(r.total, 0);
+    UPDATE web_user u
+    LEFT JOIN (SELECT uid, COUNT(*) AS total FROM web_note GROUP BY uid) n ON n.uid = u.id
+    LEFT JOIN (SELECT uid, COUNT(*) AS total FROM web_follow GROUP BY uid) f ON f.uid = u.id
+    LEFT JOIN (SELECT fid, COUNT(*) AS total FROM web_follow GROUP BY fid) fans ON fans.fid = u.id
+    SET u.trend_count = COALESCE(n.total, 0), u.follower_count = COALESCE(f.total, 0), u.fan_count = COALESCE(fans.total, 0),
+        u.create_time = u.create_time, u.update_time = u.update_time;
+
+    INSERT INTO web_search_record (id, uid, content, search_count, creator, create_time, update_time)
+    SELECT MD5(CONCAT(@mock_seed, '-search-', id)), NULL, title, 10 + id * 7, 'mock', @mock_now, @mock_now FROM web_tag ORDER BY id;
+    INSERT INTO web_feedback (uid, email, content, status, resolution, create_time, update_time)
+    SELECT id, email, CONCAT('测试反馈 ', id, '：希望增加更多分类筛选方式。'), IF(MOD(id, 2) = 0, '1', '0'),
+           IF(MOD(id, 2) = 0, '已记录此测试建议。', NULL), @mock_now, @mock_now FROM web_user WHERE id <= 10 ORDER BY id;
+
+    COMMIT;
+    DROP TEMPORARY TABLE mock_numbers;
+END$$
+DELIMITER ;
+CALL hongshu_generate_mock_data();
+DROP PROCEDURE hongshu_generate_mock_data;
+
+SELECT 'mock data ready' AS result, (SELECT COUNT(*) FROM web_user) AS users,
+       (SELECT COUNT(*) FROM web_note) AS notes, (SELECT COUNT(*) FROM web_comment) AS comments,
+       (SELECT COUNT(*) FROM web_album) AS albums, (SELECT COUNT(*) FROM web_follow) AS follows,
+       (SELECT COUNT(*) FROM web_like_or_collect) AS likes_and_collections;
+
+-- 恢复调用方原会话设置；仅在脚本全部成功执行后运行。
+SET SESSION sql_mode = @hongshu_mock_saved_sql_mode;
+SET SESSION time_zone = @hongshu_mock_saved_time_zone;
+SET SESSION foreign_key_checks = @hongshu_mock_saved_foreign_key_checks;
+SET SESSION unique_checks = @hongshu_mock_saved_unique_checks;
+SET SESSION auto_increment_increment = @hongshu_mock_saved_auto_increment_increment;
+SET SESSION auto_increment_offset = @hongshu_mock_saved_auto_increment_offset;
+SET SESSION autocommit = @hongshu_mock_saved_autocommit;
+SET SESSION character_set_client = @hongshu_mock_saved_character_set_client;
+SET SESSION character_set_connection = @hongshu_mock_saved_character_set_connection;
+SET SESSION character_set_results = @hongshu_mock_saved_character_set_results;
+SET SESSION collation_connection = @hongshu_mock_saved_collation_connection;
