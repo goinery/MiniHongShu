@@ -1178,4 +1178,258 @@ public class ExcelUtil<T> {
         this.fields = this.fields.stream().sorted(Comparator.comparing(objects -> ((Excel) objects[1]).sort())).collect(Collectors.toList());
         this.maxHeight = getRowHeight();
     }
+
+    /**
+     * 获取字段注解信息
+     */
+    public List<Object[]> getFields() {
+        List<Object[]> fields = new ArrayList<>();
+        List<Field> tempFields = new ArrayList<>();
+        tempFields.addAll(Arrays.asList(clazz.getSuperclass().getDeclaredFields()));
+        tempFields.addAll(Arrays.asList(clazz.getDeclaredFields()));
+        for (Field field : tempFields) {
+            if (!ArrayUtils.contains(this.excludeFields, field.getName())) {
+                // 单注解
+                if (field.isAnnotationPresent(Excel.class)) {
+                    Excel attr = field.getAnnotation(Excel.class);
+                    if (attr.type() == Excel.Type.ALL || attr.type() == type) {
+                        field.setAccessible(true);
+                        fields.add(new Object[]{field, attr});
+                    }
+                    if (Collection.class.isAssignableFrom(field.getType())) {
+                        subMethod = getSubMethod(field.getName(), clazz);
+                        ParameterizedType pt = (ParameterizedType) field.getGenericType();
+                        Class<?> subClass = (Class<?>) pt.getActualTypeArguments()[0];
+                        this.subFields = FieldUtils.getFieldsListWithAnnotation(subClass, Excel.class);
+                    }
+                }
+
+                // 多注解
+                if (field.isAnnotationPresent(Excels.class)) {
+                    Excels attrs = field.getAnnotation(Excels.class);
+                    Excel[] excels = attrs.value();
+                    for (Excel attr : excels) {
+                        if (!ArrayUtils.contains(this.excludeFields, field.getName() + "." + attr.targetAttr())
+                                && (attr.type() == Excel.Type.ALL || attr.type() == type)) {
+                            field.setAccessible(true);
+                            fields.add(new Object[]{field, attr});
+                        }
+                    }
+                }
+            }
+        }
+        return fields;
+    }
+
+    /**
+     * 根据注解获取最大行高
+     */
+    public short getRowHeight() {
+        double maxHeight = 0;
+        for (Object[] os : this.fields) {
+            Excel excel = (Excel) os[1];
+            maxHeight = Math.max(maxHeight, excel.height());
+        }
+        return (short) (maxHeight * 20);
+    }
+
+    /**
+     * 创建一个工作簿
+     */
+    public void createWorkbook() {
+        this.wb = new SXSSFWorkbook(500);
+        this.sheet = wb.createSheet();
+        wb.setSheetName(0, sheetName);
+        this.styles = createStyles(wb);
+    }
+
+    /**
+     * 创建工作表
+     *
+     * @param sheetNo sheet数量
+     * @param index   序号
+     */
+    public void createSheet(int sheetNo, int index) {
+        // 设置工作表的名称.
+        if (sheetNo > 1 && index > 0) {
+            this.sheet = wb.createSheet();
+            this.createTitle();
+            wb.setSheetName(index, sheetName + index);
+        }
+    }
+
+    /**
+     * 获取单元格值
+     *
+     * @param row    获取的行
+     * @param column 获取单元格列号
+     * @return 单元格值
+     */
+    public Object getCellValue(Row row, int column) {
+        if (row == null) {
+            return null;
+        }
+        Object val = "";
+        try {
+            Cell cell = row.getCell(column);
+            if (StringUtils.isNotNull(cell)) {
+                if (cell.getCellType() == CellType.NUMERIC || cell.getCellType() == CellType.FORMULA) {
+                    val = cell.getNumericCellValue();
+                    if (DateUtil.isCellDateFormatted(cell)) {
+                        val = DateUtil.getJavaDate((Double) val); // POI Excel 日期格式转换
+                    } else {
+                        if ((Double) val % 1 != 0) {
+                            val = new BigDecimal(val.toString());
+                        } else {
+                            val = new DecimalFormat("0").format(val);
+                        }
+                    }
+                } else if (cell.getCellType() == CellType.STRING) {
+                    val = cell.getStringCellValue();
+                } else if (cell.getCellType() == CellType.BOOLEAN) {
+                    val = cell.getBooleanCellValue();
+                } else if (cell.getCellType() == CellType.ERROR) {
+                    val = cell.getErrorCellValue();
+                }
+
+            }
+        } catch (Exception e) {
+            return val;
+        }
+        return val;
+    }
+
+    /**
+     * 判断是否是空行
+     *
+     * @param row 判断的行
+     */
+    private boolean isRowEmpty(Row row) {
+        if (row == null) {
+            return true;
+        }
+        for (int i = row.getFirstCellNum(); i < row.getLastCellNum(); i++) {
+            Cell cell = row.getCell(i);
+            if (cell != null && cell.getCellType() != CellType.BLANK) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * 获取Excel2003图片
+     *
+     * @param sheet    当前sheet对象
+     * @param workbook 工作簿对象
+     * @return Map key:图片单元格索引（1_1）String，value:图片流PictureData
+     */
+    public static Map<String, PictureData> getSheetPictures03(HSSFSheet sheet, HSSFWorkbook workbook) {
+        Map<String, PictureData> sheetIndexPicMap = new HashMap<>();
+        List<HSSFPictureData> pictures = workbook.getAllPictures();
+        if (!pictures.isEmpty()) {
+            for (HSSFShape shape : sheet.getDrawingPatriarch().getChildren()) {
+                HSSFClientAnchor anchor = (HSSFClientAnchor) shape.getAnchor();
+                if (shape instanceof HSSFPicture pic) {
+
+                    int pictureIndex = pic.getPictureIndex() - 1;
+                    HSSFPictureData picData = pictures.get(pictureIndex);
+                    String picIndex = anchor.getRow1() + "_" + anchor.getCol1();
+                    sheetIndexPicMap.put(picIndex, picData);
+                }
+            }
+        }
+        return sheetIndexPicMap;
+    }
+
+    /**
+     * 获取Excel2007图片
+     *
+     * @param sheet    当前sheet对象
+     * @param workbook 工作簿对象
+     * @return Map key:图片单元格索引（1_1）String，value:图片流PictureData
+     */
+    public static Map<String, PictureData> getSheetPictures07(XSSFSheet sheet, XSSFWorkbook workbook) {
+        Map<String, PictureData> sheetIndexPicMap = new HashMap<>();
+        for (POIXMLDocumentPart dr : sheet.getRelations()) {
+            if (dr instanceof XSSFDrawing drawing) {
+
+                List<XSSFShape> shapes = drawing.getShapes();
+                for (XSSFShape shape : shapes) {
+                    if (shape instanceof XSSFPicture pic) {
+
+                        XSSFClientAnchor anchor = pic.getPreferredSize();
+                        CTMarker ctMarker = anchor.getFrom();
+                        String picIndex = ctMarker.getRow() + "_" + ctMarker.getCol();
+                        sheetIndexPicMap.put(picIndex, pic.getPictureData());
+                    }
+                }
+            }
+        }
+        return sheetIndexPicMap;
+    }
+
+    /**
+     * 格式化不同类型的日期对象
+     *
+     * @param dateFormat 日期格式
+     * @param val        被格式化的日期对象
+     * @return 格式化后的日期字符
+     */
+    public String parseDateToStr(String dateFormat, Object val) {
+        return switch (val) {
+            case null -> "";
+            case Date value -> DateUtils.parseDateToStr(dateFormat, value);
+            case LocalDateTime value -> DateUtils.parseDateToStr(dateFormat, DateUtils.toDate(value));
+            case LocalDate value -> DateUtils.parseDateToStr(dateFormat, DateUtils.toDate(value));
+            default -> val.toString();
+        };
+    }
+
+    /**
+     * 是否有对象的子列表
+     */
+    public boolean isSubList() {
+        return StringUtils.isNotNull(subFields) && !subFields.isEmpty();
+    }
+
+    /**
+     * 是否有对象的子列表，集合不为空
+     */
+    public boolean isSubListValue(T vo) {
+        return StringUtils.isNotNull(subFields) && !subFields.isEmpty() && StringUtils.isNotNull(getListCellValue(vo)) && !getListCellValue(vo).isEmpty();
+    }
+
+    /**
+     * 获取集合的值
+     */
+    public Collection<?> getListCellValue(Object obj) {
+        Object value;
+        try {
+            value = subMethod.invoke(obj);
+        } catch (Exception e) {
+            return new ArrayList<>();
+        }
+        return (Collection<?>) value;
+    }
+
+    /**
+     * 获取对象的子列表方法
+     *
+     * @param name      名称
+     * @param pojoClass 类对象
+     * @return 子列表方法
+     */
+    public Method getSubMethod(String name, Class<?> pojoClass) {
+        StringBuilder getMethodName = new StringBuilder("get");
+        getMethodName.append(name.substring(0, 1).toUpperCase());
+        getMethodName.append(name.substring(1));
+        Method method = null;
+        try {
+            method = pojoClass.getMethod(getMethodName.toString());
+        } catch (Exception e) {
+            log.error("获取对象异常{}", e.getMessage());
+        }
+        return method;
+    }
 }
