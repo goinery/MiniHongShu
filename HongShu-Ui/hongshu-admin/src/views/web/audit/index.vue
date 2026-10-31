@@ -215,10 +215,139 @@
           >
             通过
           </el-button>
+          <el-button
+            @click="handleAudit(scope.row, 'reject')"
+            v-hasPermi="['web:note:audit']"
+            type="danger"
+            size="small"
+          >
+            驳回
+          </el-button>
         </template>
       </el-table-column>
     </el-table>
-  </div></template>
+
+    <pagination
+      v-show="total > 0"
+      :total="total"
+      v-model:page="queryParams.pageNum"
+      v-model:limit="queryParams.pageSize"
+      @pagination="getList"
+    />
+
+    <el-drawer v-model="detailOpen" title="审核笔记" size="min(440px, 100vw)" append-to-body>
+      <div class="audit-detail" v-if="detail">
+        <el-image
+          v-if="detail.noteCover"
+          :src="detail.noteCover"
+          :preview-src-list="[detail.noteCover]"
+          fit="cover"
+          preview-teleported
+          class="audit-cover"
+        />
+        <h3>{{ detail.title || "未填写标题" }}</h3>
+        <p class="meta">作者：{{ detail.author || "—" }}</p>
+        <p class="meta">分类：{{ getCategoryTitle(detail.cpid, detail.cid) }}</p>
+        <p class="body">{{ detail.content || "暂无正文" }}</p>
+        <div class="actions">
+          <el-button type="success" @click="handleAudit(detail, 'pass')">通过</el-button>
+          <el-button type="danger" @click="handleAudit(detail, 'reject')">驳回</el-button>
+        </div>
+      </div>
+    </el-drawer>
+
+    <!-- 添加或修改笔记对话框 -->
+    <el-dialog :title="title" v-model="open" width="500px" append-to-body>
+      <el-form ref="noteRef" :model="form" :rules="rules" label-width="80px">
+        <el-col :span="13">
+          <el-form-item label="分类" prop="pid">
+            <el-tree-select
+              v-model="form.cpid"
+              :data="navbarOptions"
+              :props="{
+                value: 'id',
+                label: 'title',
+                children: 'children',
+              }"
+              value-key="id"
+              placeholder="请选择分类"
+              check-strictly
+            />
+          </el-form-item>
+        </el-col>
+        <el-form-item label="笔记标题" prop="title">
+          <el-input v-model="form.title" placeholder="请输入笔记标题" />
+        </el-form-item>
+        <el-form-item label="笔记类型" prop="noteType">
+          <el-radio-group v-model="form.noteType">
+            <el-radio
+              v-for="dict in note_type"
+              :key="dict.value"
+              :label="dict.value"
+              >{{ dict.label }}
+            </el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="笔记封面" prop="noteCover">
+          <el-upload
+            class="image-uploader"
+            list-type="picture-card"
+            :show-file-list="false"
+            :auto-upload="false"
+            :before-upload="beforeUpload"
+            :on-change="handleChange"
+          >
+            <img alt="笔记封面" v-if="form.noteCover" :src="form.noteCover" class="image" />
+            <i v-else class="el-icon-plus image-uploader-icon">
+              <el-icon>
+                <Plus />
+              </el-icon>
+            </i>
+          </el-upload>
+        </el-form-item>
+        <el-form-item label="笔记内容" prop="content">
+          <el-input
+            v-model="form.content"
+            type="textarea"
+            :autosize="{ minRows: 3, maxRows: 8 }"
+            placeholder="请输入内容"
+          />
+        </el-form-item>
+        <el-col :span="12">
+          <el-form-item label="显示排序" prop="sort">
+            <el-input-number v-model="form.sort" :min="0" />
+          </el-form-item>
+        </el-col>
+        <el-form-item label="是否置顶" prop="pinned">
+          <el-radio-group v-model="form.pinned">
+            <el-radio
+              v-for="dict in pinned"
+              :key="dict.value"
+              :label="dict.value"
+              >{{ dict.label }}
+            </el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="笔记状态" prop="auditStatus">
+          <el-radio-group v-model="form.auditStatus">
+            <el-radio
+              v-for="dict in audit_status"
+              :key="dict.value"
+              :label="dict.value"
+              >{{ dict.label }}
+            </el-radio>
+          </el-radio-group>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button type="primary" @click="submitForm">确 定</el-button>
+          <el-button @click="cancel">取 消</el-button>
+        </div>
+      </template>
+    </el-dialog>
+  </div>
+</template>
 
 <script setup>
 import { Plus } from '@element-plus/icons-vue'
@@ -463,4 +592,72 @@ getList();
 onMounted(getTreeSelect);
 </script>
 
-<style scoped></style>
+<style scoped>
+/* 组件库内部类由子组件在运行时生成。 */
+.audit-detail .audit-cover {
+  width: 100%;
+  height: 220px;
+  border: 1px solid var(--cf-border);
+  border-radius: 6px;
+  margin-bottom: 20px;
+}
+.audit-detail h3 {
+  margin: 0 0 12px;
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--cf-text);
+  overflow-wrap: anywhere;
+}
+.audit-detail .meta {
+  margin: 0 0 6px;
+  color: var(--cf-muted);
+  font-size: 13px;
+}
+.audit-detail .body {
+  margin: 20px 0;
+  padding: 16px;
+  border: 1px solid var(--cf-border);
+  border-radius: 6px;
+  background: var(--cf-surface-subtle);
+  line-height: 1.8;
+  color: var(--cf-text);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.audit-detail .actions {
+  display: flex;
+  gap: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--cf-border);
+}
+
+/*noinspection CssUnusedSymbol*/
+.image-uploader .el-upload {
+  border: 1px dashed var(--cf-border);
+  border-radius: 6px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+/*noinspection CssUnusedSymbol*/
+.image-uploader .el-upload:hover {
+  border-color: var(--el-color-primary);
+}
+
+.image-uploader-icon {
+  font-size: 28px;
+  color: var(--cf-muted);
+  width: 100%;
+  height: 100%;
+  line-height: 145px;
+  margin-left: 1px;
+  text-align: center;
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+</style>
