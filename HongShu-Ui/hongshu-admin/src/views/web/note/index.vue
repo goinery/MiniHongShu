@@ -209,8 +209,153 @@
       <el-table-column label="点赞次数" align="center" prop="likeCount" />
       <el-table-column label="收藏次数" align="center" prop="collectionCount" />
       <el-table-column label="评论次数" align="center" prop="commentCount" />
+      <el-table-column
+        label="创建时间"
+        align="center"
+        prop="createTime"
+        width="180"
+      >
+        <template #default="scope">
+          <span>{{ parseTime(scope.row.createTime) }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column
+        label="更新时间"
+        align="center"
+        prop="updateTime"
+        width="180"
+      >
+        <template #default="scope">
+          <span>{{ parseTime(scope.row.updateTime) }}</span>
+        </template>
+      </el-table-column>
+
+      <el-table-column
+        label="操作"
+        align="center"
+        fixed="right"
+        min-width="200"
+      >
+        <template #default="scope">
+          <el-button link
+              type="primary"
+              size="small"
+              @click="handleUpdate(scope.row)"
+              v-hasPermi="['web:note:edit']">编辑</el-button>
+          <el-button link
+              type="danger"
+              size="small"
+              @click="handleDelete(scope.row)"
+              v-hasPermi="['web:note:remove']">删除</el-button>
+        </template>
+      </el-table-column>
     </el-table>
-  </div></template>
+
+    <pagination
+      v-show="total > 0"
+      :total="total"
+      v-model:page="queryParams.pageNum"
+      v-model:limit="queryParams.pageSize"
+      @pagination="getList"
+    />
+
+    <!-- 添加或修改笔记对话框 -->
+    <el-dialog :title="title" v-model="open" width="560px" append-to-body>
+      <el-form ref="noteRef" :model="form" :rules="rules" label-width="80px">
+        <el-col :span="13">
+          <el-form-item label="分类" prop="pid">
+            <el-tree-select
+              v-model="form.cpid"
+              :data="navbarOptions"
+              :props="{
+                value: 'id',
+                label: 'title',
+                children: 'children',
+              }"
+              value-key="id"
+              placeholder="请选择分类"
+              check-strictly
+            />
+          </el-form-item>
+        </el-col>
+        <el-col :span="13">
+          <el-form-item label="笔记标题" prop="title">
+            <el-input v-model="form.title" placeholder="请输入笔记标题" />
+          </el-form-item>
+        </el-col>
+        <el-form-item label="笔记类型" prop="noteType">
+          <el-radio-group v-model="form.noteType">
+            <el-radio
+              v-for="dict in note_type"
+              :key="dict.value"
+              :label="dict.value"
+            >
+              {{ dict.label }}
+            </el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="笔记封面" prop="noteCover">
+          <el-upload
+            class="image-uploader"
+            list-type="picture-card"
+            :show-file-list="false"
+            :auto-upload="false"
+            :before-upload="beforeUpload"
+            :on-change="handleChange"
+          >
+            <img alt="笔记封面" v-if="form.noteCover" :src="form.noteCover" class="image" />
+            <i v-else class="el-icon-plus image-uploader-icon">
+              <el-icon>
+                <Plus />
+              </el-icon>
+            </i>
+          </el-upload>
+        </el-form-item>
+        <el-form-item label="笔记内容" prop="content">
+          <el-input
+            v-model="form.content"
+            type="textarea"
+            :autosize="{ minRows: 3, maxRows: 8 }"
+            placeholder="请输入内容"
+          />
+        </el-form-item>
+        <el-col :span="12">
+          <el-form-item label="显示排序" prop="sort">
+            <el-input-number v-model="form.sort" :min="0" />
+          </el-form-item>
+        </el-col>
+        <el-form-item label="是否置顶" prop="pinned">
+          <el-radio-group v-model="form.pinned">
+            <el-radio
+              v-for="dict in pinned"
+              :key="dict.value"
+              :label="dict.value"
+            >
+              {{ dict.label }}
+            </el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="笔记状态" prop="auditStatus">
+          <el-radio-group v-model="form.auditStatus">
+            <el-radio
+              v-for="dict in audit_status"
+              :key="dict.value"
+              :label="dict.value"
+            >
+              {{ dict.label }}
+            </el-radio>
+          </el-radio-group>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button type="primary" @click="submitForm">确 定</el-button>
+          <el-button @click="cancel">取 消</el-button>
+        </div>
+      </template>
+    </el-dialog>
+  </div>
+</template>
 
 <script setup>
 import { Plus } from '@element-plus/icons-vue'
@@ -449,4 +594,35 @@ onMounted(() => {
 });
 </script>
 
-<style scoped></style>
+<style scoped>
+/* 组件库内部类由子组件在运行时生成。 */
+/*noinspection CssUnusedSymbol*/
+.image-uploader .el-upload {
+  border: 1px dashed var(--cf-border);
+  border-radius: 6px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+/*noinspection CssUnusedSymbol*/
+.image-uploader .el-upload:hover {
+  border-color: var(--el-color-primary);
+}
+
+.image-uploader-icon {
+  font-size: 28px;
+  color: var(--cf-muted);
+  width: 100%;
+  height: 100%;
+  line-height: 145px;
+  margin-left: 1px;
+  text-align: center;
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+</style>
