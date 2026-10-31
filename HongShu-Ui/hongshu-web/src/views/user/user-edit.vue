@@ -237,6 +237,99 @@ const removeTag = (tag: string) => {
   if (saving.value) return;
   form.tags = form.tags.filter((item) => item !== tag);
   tagError.value = "";
-};</script>
+};
+
+const confirmTag = () => {
+  if (saving.value) return;
+  const tag = inputValue.value.trim();
+  if (!tag) return;
+  if (form.tags.includes(tag)) { tagError.value = "标签已添加"; return; }
+  if (form.tags.length >= 4) { tagError.value = "最多添加4个标签"; return; }
+  if (tag.length > 8) { tagError.value = "每个标签最多8个字"; return; }
+  form.tags.push(tag);
+  inputValue.value = "";
+  tagError.value = "";
+};
+
+const save = async () => {
+  if (busy.value || checkingAvatar.value || uploadingAvatar.value) return;
+  if (!(await validateProfile())) return;
+  // 粘贴链接后直接保存，也先加载并应用头像，避免保存旧预览。
+  if (avatarUrl.value.trim() && avatarUrl.value.trim() !== form.avatar) {
+    if (!(await applyAvatarUrl())) return;
+  }
+  if (!props.modelValue) return;
+  if (!(await validateProfile())) return;
+  const request = avatarRequest;
+  const sessionVersion = userStore.getSessionVersion();
+  saving.value = true;
+  const payload = {
+    id: props.userInfo.id,
+    avatar: form.avatar,
+    username: form.username.trim(),
+    gender: form.gender,
+    phone: form.phone.trim(),
+    email: form.email.trim(),
+    birthday: form.birthday || "",
+    description: form.description,
+    tags: JSON.stringify(form.tags),
+  };
+  try {
+    if (pendingAvatar) {
+      uploadingAvatar.value = true;
+      const url = await uploadAvatarImage(pendingAvatar);
+      if (request !== avatarRequest || !props.modelValue) return;
+      form.avatar = url;
+      payload.avatar = url;
+      clearPendingAvatar();
+      uploadingAvatar.value = false;
+    }
+    const response = await updateUser(payload);
+    if (request !== avatarRequest || sessionVersion !== userStore.getSessionVersion() || !props.modelValue) return;
+    const user = userStore.getUserInfo();
+    if (user && String(user.id) === String(payload.id)) userStore.setUserInfo({ ...user, ...response.data });
+    ElMessage.success("资料已更新");
+    if (request === avatarRequest) emit("update:modelValue", false);
+    emit("success");
+  } catch {
+    // 保存失败由统一请求拦截器提示，保留表单供重试。
+  } finally {
+    uploadingAvatar.value = false;
+    saving.value = false;
+  }
+};
+
+const savePassword = async () => {
+  if (busy.value || !props.modelValue) return;
+  Object.assign(passwordErrors, { oldPassword: "", newPassword: "", confirmPassword: "" });
+  if (!passwordForm.oldPassword.trim()) passwordErrors.oldPassword = "请输入原密码";
+  if (!passwordForm.newPassword.trim() || passwordForm.newPassword.length < 6 || new TextEncoder().encode(passwordForm.newPassword).length > 72) {
+    passwordErrors.newPassword = "新密码至少6位，且不能超过72字节";
+  } else if (passwordForm.oldPassword === passwordForm.newPassword) {
+    passwordErrors.newPassword = "新密码不能与原密码相同";
+  }
+  validatePasswordConfirmation();
+  const invalid = (["oldPassword", "newPassword", "confirmPassword"] as const).find(field => passwordErrors[field]);
+  if (invalid) {
+    const ids = { oldPassword: "profile-old-password", newPassword: "profile-new-password", confirmPassword: "profile-confirm-password" };
+    await focusInvalid(passwordFields.value, ids[invalid]);
+    return;
+  }
+  const sessionVersion = userStore.getSessionVersion();
+  changingPassword.value = true;
+  try {
+    await changePassword({ ...passwordForm });
+    if (sessionVersion !== userStore.getSessionVersion()) return;
+    clearPasswords();
+    emit("update:modelValue", false);
+    ElMessage.success("密码已修改，请使用新密码重新登录");
+    userStore.loginOut();
+  } catch {
+    // 保留输入，错误由统一请求拦截器展示。
+  } finally {
+    changingPassword.value = false;
+  }
+};
+</script>
 
 <style lang="less" scoped></style>
