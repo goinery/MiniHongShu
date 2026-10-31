@@ -213,6 +213,97 @@ const getNoteByIdMethod = (noteId: string) => {
     categoryList.value = [data.cpid, data.cid].filter(Boolean);
     dynamicTags.value = (data.tagList || []).map((item: any) => item.title);
   });
-};</script>
+};
+
+const pubslish = async () => {
+  if (pushLoading.value || addingImage.value) return;
+  if (!fileList.value.length) {
+    ElMessage.warning("请上传图片或添加图片链接");
+    return;
+  }
+  if (!String(note.value.title || "").trim()) {
+    ElMessage.warning("请填写标题");
+    await nextTick();
+    TitleRef.value?.focus();
+    return;
+  }
+  if (!categoryList.value.length) {
+    ElMessage.warning("请选择分类");
+    categoryPicker.value?.openPinned(true);
+    return;
+  }
+  const coverUrl = fileList.value[0]?.url;
+  if (!coverUrl) {
+    ElMessage.warning("图片读取失败，请重新上传");
+    return;
+  }
+  pushLoading.value = true;
+  try {
+    const { width, height } = await readImageSize(coverUrl);
+    const urls = await resolveNoteImages(fileList.value, uploadNoteImage);
+    const params = new FormData();
+    Object.assign(note.value, {
+      urls,
+      noteCover: urls[0],
+      noteCoverHeight: width / height >= 1.3 ? 200 : 300,
+      count: urls.length,
+      type: 1,
+      title: String(note.value.title).trim(),
+      cpid: categoryList.value[0],
+      cid: categoryList.value[1] || categoryList.value[0],
+      tagList: dynamicTags.value,
+    });
+    params.append("noteData", JSON.stringify(note.value));
+    const editing = Boolean(note.value.id);
+    await (editing ? updateNoteByDTO(params) : saveNoteByDTO(params));
+    resetData();
+    ElMessage.success(editing ? "修改成功" : "发布成功，请等待审核");
+  } catch (error) {
+    // 接口错误由请求拦截器提示；这里只处理图片加载等本地错误。
+    if (error instanceof Error && !(error as any).isAxiosError) ElMessage.error(error.message);
+  } finally {
+    pushLoading.value = false;
+  }
+};
+
+const resetData = () => {
+  endImageDrag();
+  imageRequest++;
+  addingImage.value = false;
+  imageUrl.value = "";
+  imageUrlError.value = "";
+  dialogVisible.value = false;
+  dialogImageUrl.value = "";
+  note.value = {};
+  categoryList.value = [];
+  const previousFiles = fileList.value;
+  fileList.value = [];
+  void nextTick(() => clearLocalPreviews(previousFiles));
+  pushLoading.value = false;
+  dynamicTags.value = [];
+  inputValue.value = "";
+  tagPicker.value?.close();
+  categoryPicker.value?.close();
+};
+
+const clearLocalPreviews = (files = fileList.value) => {
+  for (const file of files) {
+    if (file.url?.startsWith("blob:")) URL.revokeObjectURL(file.url);
+  }
+};
+
+onBeforeUnmount(() => { imageRequest++; clearLocalPreviews(); });
+
+const initData = () => {
+  isLogin.value = userStore.isLogin();
+  if (!isLogin.value) return;
+  const noteId = route.query.noteId as string;
+  if (noteId) getNoteByIdMethod(noteId);
+  void loadCategories();
+  getHotTag();
+};
+
+initData();
+</script>
 
 <style lang="less" scoped></style>
