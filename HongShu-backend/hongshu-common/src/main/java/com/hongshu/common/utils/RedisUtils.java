@@ -540,4 +540,447 @@ public class RedisUtils {
         return redisTemplate.opsForList().rightPopAndLeftPush(sourceKey,
                 destinationKey);
     }
+
+    /**
+     * 从列表中弹出一个值，将弹出的元素插入到另外一个列表中并返回它； 如果列表没有元素会阻塞列表直到等待超时或发现可弹出元素为止
+     *
+     */
+    public String lBRightPopAndLeftPush(String sourceKey, String destinationKey,
+                                        long timeout, TimeUnit unit) {
+        return redisTemplate.opsForList().rightPopAndLeftPush(sourceKey,
+                destinationKey, Duration.of(timeout, unit.toChronoUnit()));
+    }
+
+    /**
+     * 删除集合中值等于value得元素
+     *
+     * @param index index=0, 删除所有值等于value的元素; index>0, 从头部开始删除第一个值等于value的元素;
+     *              index<0, 从尾部开始删除第一个值等于value的元素;
+     */
+    public Long lRemove(String key, long index, String value) {
+        return redisTemplate.opsForList().remove(key, index, value);
+    }
+
+    /**
+     * 裁剪list
+     *
+     */
+    public void lTrim(String key, long start, long end) {
+        redisTemplate.opsForList().trim(key, start, end);
+    }
+
+    /**
+     * 获取列表长度
+     *
+     */
+    public Long lLen(String key) {
+        return redisTemplate.opsForList().size(key);
+    }
+
+    /* --------------------set相关操作-------------------------- */
+
+    /**
+     * set添加元素
+     *
+     */
+    public Long sAdd(String key, String... values) {
+        return redisTemplate.opsForSet().add(key, values);
+    }
+
+    /**
+     * set移除元素
+     *
+     */
+    public Long sRemove(String key, Object... values) {
+        return redisTemplate.opsForSet().remove(key, values);
+    }
+
+    /**
+     * 移除并返回集合的一个随机元素
+     *
+     */
+    public String sPop(String key) {
+        return redisTemplate.opsForSet().pop(key);
+    }
+
+    /**
+     * 将元素value从一个集合移到另一个集合
+     *
+     */
+    public Boolean sMove(String key, String value, String destKey) {
+        return redisTemplate.opsForSet().move(key, value, destKey);
+    }
+
+    /**
+     * 获取集合的大小
+     *
+     */
+    public Long sSize(String key) {
+        return redisTemplate.opsForSet().size(key);
+    }
+
+    /**
+     * 判断集合是否包含value
+     *
+     */
+    public Boolean sIsMember(String key, Object value) {
+        return redisTemplate.opsForSet().isMember(key, value);
+    }
+
+    /**
+     * 获取两个集合的交集
+     *
+     */
+    public Set<String> sIntersect(String key, String otherKey) {
+        return redisTemplate.opsForSet().intersect(key, otherKey);
+    }
+
+    /**
+     * 获取key集合与多个集合的交集
+     *
+     */
+    public Set<String> sIntersect(String key, Collection<String> otherKeys) {
+        return redisTemplate.opsForSet().intersect(key, otherKeys);
+    }
+
+    /**
+     * key集合与otherKey集合的交集存储到destKey集合中
+     *
+     */
+    public Long sIntersectAndStore(String key, String otherKey, String destKey) {
+        return redisTemplate.opsForSet().intersectAndStore(key, otherKey,
+                destKey);
+    }
+
+    /**
+     * key集合与多个集合的交集存储到destKey集合中
+     *
+     */
+    public Long sIntersectAndStore(String key, Collection<String> otherKeys,
+                                   String destKey) {
+        return redisTemplate.opsForSet().intersectAndStore(key, otherKeys,
+                destKey);
+    }
+
+    /**
+     * 获取两个集合的并集
+     *
+     */
+    public Set<String> sUnion(String key, String otherKeys) {
+        return redisTemplate.opsForSet().union(key, otherKeys);
+    }
+
+    /**
+     * 获取key集合与多个集合的并集
+     *
+     */
+    public Set<String> sUnion(String key, Collection<String> otherKeys) {
+        return redisTemplate.opsForSet().union(key, otherKeys);
+    }
+
+    /**
+     * key集合与otherKey集合的并集存储到destKey中
+     *
+     */
+    public Long sUnionAndStore(String key, String otherKey, String destKey) {
+        return redisTemplate.opsForSet().unionAndStore(key, otherKey, destKey);
+    }
+
+    /**
+     * key集合与多个集合的并集存储到destKey中
+     *
+     */
+    public Long sUnionAndStore(String key, Collection<String> otherKeys,
+                               String destKey) {
+        return redisTemplate.opsForSet().unionAndStore(key, otherKeys, destKey);
+    }
+
+    /**
+     * 获取两个集合的差集
+     *
+     */
+    public Set<String> sDifference(String key, String otherKey) {
+        return redisTemplate.opsForSet().difference(key, otherKey);
+    }
+
+    /**
+     * 获取key集合与多个集合的差集
+     *
+     */
+    public Set<String> sDifference(String key, Collection<String> otherKeys) {
+        return redisTemplate.opsForSet().difference(key, otherKeys);
+    }
+
+    /**
+     * key集合与otherKey集合的差集存储到destKey中
+     *
+     */
+    public Long sDifference(String key, String otherKey, String destKey) {
+        return redisTemplate.opsForSet().differenceAndStore(key, otherKey,
+                destKey);
+    }
+
+    /**
+     * key集合与多个集合的差集存储到destKey中
+     *
+     */
+    public Long sDifference(String key, Collection<String> otherKeys,
+                            String destKey) {
+        return redisTemplate.opsForSet().differenceAndStore(key, otherKeys,
+                destKey);
+    }
+
+    /**
+     * 获取集合所有元素
+     *
+     */
+    public Set<String> setMembers(String key) {
+        return redisTemplate.opsForSet().members(key);
+    }
+
+    /**
+     * 随机获取集合中的一个元素
+     *
+     */
+    public String sRandomMember(String key) {
+        return redisTemplate.opsForSet().randomMember(key);
+    }
+
+    /**
+     * 随机获取集合中count个元素
+     *
+     */
+    public List<String> sRandomMembers(String key, long count) {
+        return redisTemplate.opsForSet().randomMembers(key, count);
+    }
+
+    /**
+     * 随机获取集合中count个元素并且去除重复的
+     *
+     */
+    public Set<String> sDistinctRandomMembers(String key, long count) {
+        return redisTemplate.opsForSet().distinctRandomMembers(key, count);
+    }
+
+    public Cursor<String> sScan(String key, ScanOptions options) {
+        return redisTemplate.opsForSet().scan(key, options);
+    }
+
+    /*------------------zSet相关操作--------------------------------*/
+
+    /**
+     * 添加元素,有序集合是按照元素的score值由小到大排列
+     *
+     */
+    public Boolean zAdd(String key, String value, double score) {
+        return redisTemplate.opsForZSet().add(key, value, score);
+    }
+
+    public Long zAdd(String key, Set<TypedTuple<String>> values) {
+        return redisTemplate.opsForZSet().add(key, values);
+    }
+
+    public Long zRemove(String key, Object... values) {
+        return redisTemplate.opsForZSet().remove(key, values);
+    }
+
+    /**
+     * 增加元素的score值，并返回增加后的值
+     *
+     */
+    public Double zIncrementScore(String key, String value, double delta) {
+        return redisTemplate.opsForZSet().incrementScore(key, value, delta);
+    }
+
+    /**
+     * 返回元素在集合的排名,有序集合是按照元素的score值由小到大排列
+     *
+     * @return 0表示第一位
+     */
+    public Long zRank(String key, Object value) {
+        return redisTemplate.opsForZSet().rank(key, value);
+    }
+
+    /**
+     * 返回元素在集合的排名,按元素的score值由大到小排列
+     *
+     */
+    public Long zReverseRank(String key, Object value) {
+        return redisTemplate.opsForZSet().reverseRank(key, value);
+    }
+
+    /**
+     * 获取集合的元素, 从小到大排序
+     *
+     * @param start 开始位置
+     * @param end   结束位置, -1查询所有
+     */
+    public Set<String> zRange(String key, long start, long end) {
+        return redisTemplate.opsForZSet().range(key, start, end);
+    }
+
+    /**
+     * 获取集合元素, 并且把score值也获取
+     *
+     */
+    public Set<TypedTuple<String>> zRangeWithScores(String key, long start,
+                                                    long end) {
+        return redisTemplate.opsForZSet().rangeWithScores(key, start, end);
+    }
+
+    /**
+     * 根据Score值查询集合元素
+     *
+     * @param min 最小值
+     * @param max 最大值
+     */
+    public Set<String> zRangeByScore(String key, double min, double max) {
+        return redisTemplate.opsForZSet().rangeByScore(key, min, max);
+    }
+
+    /**
+     * 根据Score值查询集合元素, 从小到大排序
+     *
+     * @param min 最小值
+     * @param max 最大值
+     */
+    public Set<TypedTuple<String>> zRangeByScoreWithScores(String key,
+                                                           double min, double max) {
+        return redisTemplate.opsForZSet().rangeByScoreWithScores(key, min, max);
+    }
+
+    public Set<TypedTuple<String>> zRangeByScoreWithScores(String key,
+                                                           double min, double max, long start, long end) {
+        return redisTemplate.opsForZSet().rangeByScoreWithScores(key, min, max,
+                start, end);
+    }
+
+    /**
+     * 获取集合的元素, 从大到小排序
+     *
+     */
+    public Set<String> zReverseRange(String key, long start, long end) {
+        return redisTemplate.opsForZSet().reverseRange(key, start, end);
+    }
+
+    /**
+     * 获取集合的元素, 从大到小排序, 并返回score值
+     *
+     */
+    public Set<TypedTuple<String>> zReverseRangeWithScores(String key,
+                                                           long start, long end) {
+        return redisTemplate.opsForZSet().reverseRangeWithScores(key, start,
+                end);
+    }
+
+    /**
+     * 根据Score值查询集合元素, 从大到小排序
+     *
+     */
+    public Set<String> zReverseRangeByScore(String key, double min,
+                                            double max) {
+        return redisTemplate.opsForZSet().reverseRangeByScore(key, min, max);
+    }
+
+    /**
+     * 根据Score值查询集合元素, 从大到小排序
+     *
+     */
+    public Set<TypedTuple<String>> zReverseRangeByScoreWithScores(
+            String key, double min, double max) {
+        return redisTemplate.opsForZSet().reverseRangeByScoreWithScores(key,
+                min, max);
+    }
+
+    public Set<String> zReverseRangeByScore(String key, double min,
+                                            double max, long start, long end) {
+        return redisTemplate.opsForZSet().reverseRangeByScore(key, min, max,
+                start, end);
+    }
+
+    /**
+     * 根据score值获取集合元素数量
+     *
+     */
+    public Long zCount(String key, double min, double max) {
+        return redisTemplate.opsForZSet().count(key, min, max);
+    }
+
+    /**
+     * 获取集合大小
+     *
+     */
+    public Long zSize(String key) {
+        return redisTemplate.opsForZSet().size(key);
+    }
+
+    /**
+     * 获取集合大小
+     *
+     */
+    public Long zZCard(String key) {
+        return redisTemplate.opsForZSet().zCard(key);
+    }
+
+    /**
+     * 获取集合中value元素的score值
+     *
+     */
+    public Double zScore(String key, Object value) {
+        return redisTemplate.opsForZSet().score(key, value);
+    }
+
+    /**
+     * 移除指定索引位置的成员
+     *
+     */
+    public Long zRemoveRange(String key, long start, long end) {
+        return redisTemplate.opsForZSet().removeRange(key, start, end);
+    }
+
+    /**
+     * 根据指定的score值的范围来移除成员
+     *
+     */
+    public Long zRemoveRangeByScore(String key, double min, double max) {
+        return redisTemplate.opsForZSet().removeRangeByScore(key, min, max);
+    }
+
+    /**
+     * 获取key和otherKey的并集并存储在destKey中
+     *
+     */
+    public Long zUnionAndStore(String key, String otherKey, String destKey) {
+        return redisTemplate.opsForZSet().unionAndStore(key, otherKey, destKey);
+    }
+
+    public Long zUnionAndStore(String key, Collection<String> otherKeys,
+                               String destKey) {
+        return redisTemplate.opsForZSet()
+                .unionAndStore(key, otherKeys, destKey);
+    }
+
+    /**
+     * 交集
+     *
+     */
+    public Long zIntersectAndStore(String key, String otherKey,
+                                   String destKey) {
+        return redisTemplate.opsForZSet().intersectAndStore(key, otherKey,
+                destKey);
+    }
+
+    /**
+     * 交集
+     *
+     */
+    public Long zIntersectAndStore(String key, Collection<String> otherKeys,
+                                   String destKey) {
+        return redisTemplate.opsForZSet().intersectAndStore(key, otherKeys,
+                destKey);
+    }
+
+    public Cursor<TypedTuple<String>> zScan(String key, ScanOptions options) {
+        return redisTemplate.opsForZSet().scan(key, options);
+    }
 }
