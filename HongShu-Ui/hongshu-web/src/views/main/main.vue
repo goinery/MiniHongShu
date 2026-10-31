@@ -652,10 +652,135 @@ initData();
           .left {
             display: flex;
             align-items: center;
-}
-}
-}
-}
-}
+            gap: 16px;
+
+            > .interaction-action {
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              flex-shrink: 0;
+              gap: 6px;
+              min-width: 40px;
+              height: 32px;
+              margin: 0;
+              padding: 0;
+              border: 0;
+              background: transparent;
+              color: rgba(51, 51, 51, 0.6);
+              font-size: 14px;
+              line-height: 1;
+              cursor: pointer;
+
+              &:hover {
+                color: var(--el-color-primary);
+              }
+
+              &:focus-visible {
+                outline: 2px solid var(--el-color-primary);
+                outline-offset: 3px;
+                border-radius: 4px;
+              }
+            }
+
+            .interaction-action :deep(.count) {
+              margin: 0;
+              font-weight: 500;
+              font-size: 13px;
+              line-height: 1;
+              white-space: nowrap;
+            }
+
+            .action-icon,
+            .interaction-action :deep(.iconfont) {
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              width: 24px;
+              height: 24px;
+              flex-shrink: 0;
+              line-height: 1;
+            }
+          }
+        }
+
+        .comment-wrapper {
+          &.active {
+            .input-wrapper {
+              flex-shrink: 1;
+            }
+          }
+        }
+
+        .comment-wrapper {
+          display: flex;
+          font-size: 16px;
+          overflow: hidden;
+
+          .input-wrapper {
+            display: flex;
+            position: relative;
+            width: 100%;
+            flex-shrink: 0;
+            transition: flex 0.3s;
+
+            .comment-input:placeholder-shown {
+              padding: 12px 92px 12px 36px;
+              background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAMAAABg3Am1AAAANlBMVEUAAAA0NDQyMjIzMzM2NjY2NjYyMjI0NDQ1NTU1NTUzMzM1NTU1NTUzMzM1NTUzMzM1NTU1NTVl84gVAAAAEnRSTlMAmUyGEzlgc2AmfRx9aToKQzCSoXt+AAAAhElEQVRIx+3Uuw6DMAyF4XOcBOdCafv+L9vQkQFyJBak/JOHT7K8GLM7epuHusRhHwP/mejJ77i32CpZh33aD+lDFDzgZFE8+tgUv5BB9NxEb9NPL3i46JvoUUhXPBKZFQ/rTPHI3ZXt8xr12KX055LoAVtXz9kKHprxNMMxXqRvmAn9ACQ7A/tTXYAxAAAAAElFTkSuQmCC);
+              background-repeat: no-repeat;
+              background-size: 16px 16px;
+              background-position: 16px 12px;
+              color: rgba(51, 51, 51, 0.3);
+            }
+
+            .comment-input {
+              padding: 12px 92px 12px 16px;
+              width: 100%;
+              height: 40px;
+              line-height: 16px;
+              background: rgba(0, 0, 0, 0.03);
+              caret-color: rgba(51, 51, 51, 0.3);
+              border-radius: 22px;
+              border: none;
+              outline: none;
+              resize: none;
+              color: #333;
+            }
+
+            .input-buttons {
+              position: absolute;
+              right: 0;
+              top: 0;
+              height: 40px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              width: 92px;
+              color: rgba(51, 51, 51, 0.3);
+            }
+          }
+
+          .submit {
+            margin-left: 8px;
+            width: 60px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+            flex-shrink: 0;
+            background: #3d8af5;
+            border-radius: 44px;
+            font-size: 16px;
+          }
+        }
+
+        .comment-comp {
+          margin-top: 20px;
+        }
+      }
+    }
+  }
 }
 </style>
