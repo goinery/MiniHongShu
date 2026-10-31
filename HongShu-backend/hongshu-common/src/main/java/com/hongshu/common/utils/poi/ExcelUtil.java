@@ -553,4 +553,281 @@ public class ExcelUtil<T> {
             }
         }
     }
+
+    /**
+     * 填充excel数据
+     *
+     * @param index 序号
+     */
+    @SuppressWarnings("unchecked")
+    public void fillExcelData(int index) {
+        int startNo = index * sheetSize;
+        int endNo = Math.min(startNo + sheetSize, list.size());
+        int rowNo = (1 + rownum) - startNo;
+        for (int i = startNo; i < endNo; i++) {
+            rowNo = isSubList() ? (i > 1 ? rowNo + 1 : rowNo + i) : i + 1 + rownum - startNo;
+            Row row = sheet.createRow(rowNo);
+            // 得到导出对象.
+            T vo = list.get(i);
+            Collection<?> subList = null;
+            if (isSubList()) {
+                if (isSubListValue(vo)) {
+                    subList = getListCellValue(vo);
+                    subMergedLastRowNum = subMergedLastRowNum + subList.size();
+                } else {
+                    subMergedFirstRowNum++;
+                    subMergedLastRowNum++;
+                }
+            }
+            int column = 0;
+            for (Object[] os : fields) {
+                Field field = (Field) os[0];
+                Excel excel = (Excel) os[1];
+                if (Collection.class.isAssignableFrom(field.getType()) && StringUtils.isNotNull(subList)) {
+                    boolean subFirst = false;
+                    for (Object obj : subList) {
+                        if (subFirst) {
+                            rowNo++;
+                            row = sheet.createRow(rowNo);
+                        }
+                        List<Field> subFields = FieldUtils.getFieldsListWithAnnotation(obj.getClass(), Excel.class);
+                        int subIndex = 0;
+                        for (Field subField : subFields) {
+                            if (subField.isAnnotationPresent(Excel.class)) {
+                                subField.setAccessible(true);
+                                Excel attr = subField.getAnnotation(Excel.class);
+                                this.addCell(attr, row, (T) obj, subField, column + subIndex);
+                            }
+                            subIndex++;
+                        }
+                        subFirst = true;
+                    }
+                    this.subMergedFirstRowNum = this.subMergedFirstRowNum + subList.size();
+                } else {
+                    this.addCell(excel, row, vo, field, column++);
+                }
+            }
+        }
+    }
+
+    /**
+     * 创建表格样式
+     *
+     * @param wb 工作薄对象
+     * @return 样式列表
+     */
+    private Map<String, CellStyle> createStyles(Workbook wb) {
+        // 写入各条记录,每条记录对应excel表中的一行
+        Map<String, CellStyle> styles = new HashMap<>();
+        CellStyle style = wb.createCellStyle();
+        style.setAlignment(HorizontalAlignment.CENTER);
+        style.setVerticalAlignment(VerticalAlignment.CENTER);
+        Font titleFont = wb.createFont();
+        titleFont.setFontName("Arial");
+        titleFont.setFontHeightInPoints((short) 16);
+        titleFont.setBold(true);
+        style.setFont(titleFont);
+        DataFormat dataFormat = wb.createDataFormat();
+        style.setDataFormat(dataFormat.getFormat("@"));
+        styles.put("title", style);
+
+        style = wb.createCellStyle();
+        style.setAlignment(HorizontalAlignment.CENTER);
+        style.setVerticalAlignment(VerticalAlignment.CENTER);
+        setDataCellBorders(style);
+        Font dataFont = wb.createFont();
+        dataFont.setFontName("Arial");
+        dataFont.setFontHeightInPoints((short) 10);
+        style.setFont(dataFont);
+        styles.put("data", style);
+
+        style = wb.createCellStyle();
+        style.setAlignment(HorizontalAlignment.CENTER);
+        style.setVerticalAlignment(VerticalAlignment.CENTER);
+        Font totalFont = wb.createFont();
+        totalFont.setFontName("Arial");
+        totalFont.setFontHeightInPoints((short) 10);
+        style.setFont(totalFont);
+        styles.put("total", style);
+
+        styles.putAll(annotationHeaderStyles(wb, styles));
+
+        styles.putAll(annotationDataStyles());
+
+        return styles;
+    }
+
+    /**
+     * 根据Excel注解创建表格头样式
+     *
+     * @param wb 工作薄对象
+     * @return 自定义样式列表
+     */
+    private Map<String, CellStyle> annotationHeaderStyles(Workbook wb, Map<String, CellStyle> styles) {
+        Map<String, CellStyle> headerStyles = new HashMap<>();
+        for (Object[] os : fields) {
+            Excel excel = (Excel) os[1];
+            String key = StringUtils.format("header_{}_{}", excel.headerColor(), excel.headerBackgroundColor());
+            if (!headerStyles.containsKey(key)) {
+                CellStyle style = wb.createCellStyle();
+                style.cloneStyleFrom(styles.get("data"));
+                style.setAlignment(HorizontalAlignment.CENTER);
+                style.setVerticalAlignment(VerticalAlignment.CENTER);
+                style.setFillForegroundColor(excel.headerBackgroundColor().index);
+                style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+                Font headerFont = wb.createFont();
+                headerFont.setFontName("Arial");
+                headerFont.setFontHeightInPoints((short) 10);
+                headerFont.setBold(true);
+                headerFont.setColor(excel.headerColor().index);
+                style.setFont(headerFont);
+                // 设置表格头单元格文本形式
+                DataFormat dataFormat = wb.createDataFormat();
+                style.setDataFormat(dataFormat.getFormat("@"));
+                headerStyles.put(key, style);
+            }
+        }
+        return headerStyles;
+    }
+
+    /**
+     * 根据Excel注解创建表格列样式
+     *
+     * @return 自定义样式列表
+     */
+    private Map<String, CellStyle> annotationDataStyles() {
+        Map<String, CellStyle> styles = new HashMap<>();
+        for (Object[] os : fields) {
+            Field field = (Field) os[0];
+            Excel excel = (Excel) os[1];
+            if (Collection.class.isAssignableFrom(field.getType())) {
+                ParameterizedType pt = (ParameterizedType) field.getGenericType();
+                Class<?> subClass = (Class<?>) pt.getActualTypeArguments()[0];
+                List<Field> subFields = FieldUtils.getFieldsListWithAnnotation(subClass, Excel.class);
+                for (Field subField : subFields) {
+                    Excel subExcel = subField.getAnnotation(Excel.class);
+                    annotationDataStyles(styles, subField, subExcel);
+                }
+            } else {
+                annotationDataStyles(styles, field, excel);
+            }
+        }
+        return styles;
+    }
+
+    /**
+     * 根据Excel注解创建表格列样式
+     *
+     * @param styles 自定义样式列表
+     * @param field  属性列信息
+     * @param excel  注解信息
+     */
+    public void annotationDataStyles(Map<String, CellStyle> styles, Field field, Excel excel) {
+        String key = StringUtils.format("data_{}_{}_{}_{}", excel.align(), excel.color(), excel.backgroundColor(), excel.cellType());
+        if (!styles.containsKey(key)) {
+            CellStyle style = wb.createCellStyle();
+            style.setAlignment(excel.align());
+            style.setVerticalAlignment(VerticalAlignment.CENTER);
+            setDataCellBorders(style);
+            style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            style.setFillForegroundColor(excel.backgroundColor().getIndex());
+            Font dataFont = wb.createFont();
+            dataFont.setFontName("Arial");
+            dataFont.setFontHeightInPoints((short) 10);
+            dataFont.setColor(excel.color().index);
+            style.setFont(dataFont);
+            if (Excel.ColumnType.TEXT == excel.cellType()) {
+                DataFormat dataFormat = wb.createDataFormat();
+                style.setDataFormat(dataFormat.getFormat("@"));
+            }
+            styles.put(key, style);
+        }
+    }
+
+    private static void setDataCellBorders(CellStyle style) {
+        style.setBorderRight(BorderStyle.THIN);
+        style.setRightBorderColor(IndexedColors.GREY_50_PERCENT.getIndex());
+        style.setBorderLeft(BorderStyle.THIN);
+        style.setLeftBorderColor(IndexedColors.GREY_50_PERCENT.getIndex());
+        style.setBorderTop(BorderStyle.THIN);
+        style.setTopBorderColor(IndexedColors.GREY_50_PERCENT.getIndex());
+        style.setBorderBottom(BorderStyle.THIN);
+        style.setBottomBorderColor(IndexedColors.GREY_50_PERCENT.getIndex());
+    }
+
+    /**
+     * 创建单元格
+     */
+    public Cell createHeadCell(Excel attr, Row row, int column) {
+        // 创建列
+        Cell cell = row.createCell(column);
+        // 写入列信息
+        cell.setCellValue(attr.name());
+        setDataValidation(attr, row, column);
+        cell.setCellStyle(styles.get(StringUtils.format("header_{}_{}", attr.headerColor(), attr.headerBackgroundColor())));
+        if (isSubList()) {
+            // 填充默认样式，防止合并单元格样式失效
+            sheet.setDefaultColumnStyle(column, styles.get(StringUtils.format("data_{}_{}_{}_{}", attr.align(), attr.color(), attr.backgroundColor(), attr.cellType())));
+            if (attr.needMerge()) {
+                sheet.addMergedRegion(new CellRangeAddress(rownum - 1, rownum, column, column));
+            }
+        }
+        return cell;
+    }
+
+    /**
+     * 设置单元格信息
+     *
+     * @param value 单元格值
+     * @param attr  注解相关
+     * @param cell  单元格信息
+     */
+    public void setCellVo(Object value, Excel attr, Cell cell) {
+        if (Excel.ColumnType.STRING == attr.cellType() || Excel.ColumnType.TEXT == attr.cellType()) {
+            String cellValue = Convert.toStr(value);
+            // 对于任何以表达式触发字符 =-+@开头的单元格，直接使用tab字符作为前缀，防止CSV注入。
+            if (StringUtils.startsWithAny(cellValue, FORMULA_STR)) {
+                cellValue = RegExUtils.replaceFirst(cellValue, FORMULA_REGEX_STR, "\t$0");
+            }
+            if (value instanceof Collection && StringUtils.equals("[]", cellValue)) {
+                cellValue = StringUtils.EMPTY;
+            }
+            cell.setCellValue(StringUtils.isNull(cellValue) ? attr.defaultValue() : cellValue + attr.suffix());
+        } else if (Excel.ColumnType.NUMERIC == attr.cellType()) {
+            if (StringUtils.isNotNull(value)) {
+                cell.setCellValue(StringUtils.contains(Convert.toStr(value), ".") ? Convert.toDouble(value) : Convert.toInt(value));
+            }
+        } else if (Excel.ColumnType.IMAGE == attr.cellType()) {
+            ClientAnchor anchor = new XSSFClientAnchor(0, 0, 0, 0, (short) cell.getColumnIndex(), cell.getRow().getRowNum(), (short) (cell.getColumnIndex() + 1), cell.getRow().getRowNum() + 1);
+            String imagePath = Convert.toStr(value);
+            if (StringUtils.isNotEmpty(imagePath)) {
+                byte[] data = ImageUtils.getImage(imagePath);
+                getDrawingPatriarch(cell.getSheet()).createPicture(anchor,
+                        cell.getSheet().getWorkbook().addPicture(data, getImageType(data)));
+            }
+        }
+    }
+
+    /**
+     * 获取画布
+     */
+    public static Drawing<?> getDrawingPatriarch(Sheet sheet) {
+        if (sheet.getDrawingPatriarch() == null) {
+            sheet.createDrawingPatriarch();
+        }
+        return sheet.getDrawingPatriarch();
+    }
+
+    /**
+     * 获取图片类型,设置图片插入类型
+     */
+    public int getImageType(byte[] value) {
+        String type = FileTypeUtils.getFileExtendName(value);
+        if ("JPG".equalsIgnoreCase(type)) {
+            return Workbook.PICTURE_TYPE_JPEG;
+        } else if ("PNG".equalsIgnoreCase(type)) {
+            return Workbook.PICTURE_TYPE_PNG;
+        }
+        return Workbook.PICTURE_TYPE_JPEG;
+    }
 }
