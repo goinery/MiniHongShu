@@ -299,4 +299,223 @@ const initData = () => {
 initData();
 </script>
 
-<style lang="less" scoped></style>
+<style lang="less" scoped>
+.feeds-page {
+  flex: 1;
+  padding: 0 var(--page-inline-padding);
+  padding-top: 72px;
+  height: 100vh;
+
+  .channel-container {
+    // 扩展滚动区域，为首尾按钮的悬浮放大留白，按钮仍与卡片左边缘对齐。
+    margin: 0 -12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    user-select: none;
+    -webkit-user-select: none;
+
+    .channel-scroll-container {
+      backdrop-filter: blur(20px);
+      background-color: transparent;
+      width: 100%;
+      min-width: 0;
+
+      position: relative;
+      overflow: visible;
+      display: flex;
+      user-select: none;
+      -webkit-user-select: none;
+      align-items: center;
+      font-size: 16px;
+      color: rgba(51, 51, 51, 0.8);
+      white-space: nowrap;
+      height: 72px;
+
+      .content-container::-webkit-scrollbar {
+        display: none;
+      }
+
+      .content-container {
+        display: flex;
+        max-width: 100%;
+        padding: 12px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        white-space: nowrap;
+        color: rgba(51, 51, 51, 0.8);
+
+        .active {
+          font-weight: 600;
+          background: rgba(0, 0, 0, 0.03);
+          border-radius: 999px;
+          color: #333;
+        }
+
+        .channel {
+          flex-shrink: 0;
+          height: 40px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          padding: 0 16px;
+          cursor: pointer;
+          -webkit-user-select: none;
+          user-select: none;
+        }
+        .channel:hover {
+          cursor: pointer; /* 显示小手指针 */
+          transform: scale(1.2); /* 鼠标移入时按钮稍微放大 */
+        }
+      }
+    }
+  }
+
+  .feeds-container {
+    position: relative;
+    transition: width 0.5s;
+    margin: 0 auto;
+
+    &.is-replacing :deep(.waterfall-item) {
+      // 覆盖插件写入的行内 transform 过渡，仅在整批换数据时生效。
+      transition: none !important;
+    }
+
+    .feeds-loading {
+      margin: 3vh;
+      text-align: center;
+    }
+
+    .feeds-loading-top {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 0;
+      overflow: hidden;
+      opacity: 0;
+      transition: height 0.25s ease, opacity 0.2s ease;
+
+      &.is-visible {
+        height: 6vh;
+        opacity: 1;
+      }
+    }
+
+    .footer {
+      padding: 12px;
+
+      .title {
+        margin-bottom: 8px;
+        word-break: break-all;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        overflow: hidden;
+        font-weight: 500;
+        font-size: 14px;
+        line-height: 140%;
+        color: #333;
+      }
+
+      .author-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 20px;
+        color: rgba(51, 51, 51, 0.8);
+        font-size: 12px;
+        transition: color 1s;
+
+        .author {
+          display: flex;
+          align-items: center;
+          color: inherit;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          margin-right: 12px;
+
+          .author-avatar {
+            margin-right: 6px;
+            width: 20px;
+            height: 20px;
+            border-radius: 20px;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            flex-shrink: 0;
+            object-fit: cover;
+          }
+
+          .name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+        }
+
+        .like-wrapper {
+          position: relative;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+
+          .count {
+            margin-left: 2px;
+          }
+        }
+      }
+    }
+  }
+
+  .floating-btn-sets {
+    position: fixed;
+    display: flex;
+    flex-direction: column;
+    width: 40px;
+    grid-gap: 8px;
+    gap: 8px;
+    right: 24px;
+    bottom: 24px;
+
+    .back-top {
+      width: 40px;
+      height: 40px;
+      background: #fff;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      border-radius: 100px;
+      color: rgba(51, 51, 51, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      // transition: background 0.2s;
+      cursor: pointer;
+    }
+
+    .reload {
+      width: 40px;
+      height: 40px;
+      background: #fff;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      box-shadow:
+        0 2px 8px 0 rgba(0, 0, 0, 0.1),
+        0 1px 2px 0 rgba(0, 0, 0, 0.02);
+      border-radius: 100px;
+      color: rgba(51, 51, 51, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      //transition: background 0.2s;
+      cursor: pointer;
+    }
+  }
+  .feeds-end {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 50px;
+    color: #999;
+    font-size: 16px;
+    margin-top: 20px;
+    border-radius: 10px;
+  }
+}
+</style>
