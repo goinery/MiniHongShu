@@ -1,4 +1,120 @@
-<template></template>
+<template>
+  <div class="feeds-page">
+    <div class="channel-container">
+      <div class="scroll-container channel-scroll-container">
+        <div class="content-container">
+          <div :class="categoryClass == '0' ? 'channel active' : 'channel'" @click="getNoteList">推荐</div>
+          <div
+            :class="categoryClass == item.id ? 'channel active' : 'channel'"
+            v-for="item in categoryList"
+            :key="item.id"
+            @click="getNoteListByCategory(item.id)"
+          >
+            {{ item.title }}
+          </div>
+        </div>
+      </div>
+    </div>
+    <div
+      class="feeds-container"
+      :class="{ 'is-replacing': replacingNotes }"
+      v-infinite-scroll="loadMoreData"
+      :infinite-scroll-distance="50"
+      :infinite-scroll-disabled="loading || isEnd"
+      :aria-busy="loading"
+    >
+      <div class="feeds-loading-top" :class="{ 'is-visible': topLoading }" :aria-hidden="!topLoading">
+        <Loading style="width: 1.2em; height: 1.2em"></Loading>
+      </div>
+      <Waterfall
+        ref="waterfall"
+        :list="noteList"
+        :delay="0"
+        :width="options.width"
+        :gutter="options.gutter"
+        :hasAroundGutter="options.hasAroundGutter"
+        :animation-effect="options.animationEffect"
+        :animation-duration="options.animationDuration"
+        :animation-delay="options.animationDelay"
+        :breakpoints="options.breakpoints"
+        style="min-width: 740px"
+      >
+        <template #item="{ item }">
+          <el-skeleton style="width: 240px" :loading="!item.isLoading" animated>
+            <template #template>
+              <el-image
+                :src="item.noteCover"
+                :style="{
+                  width: '240px',
+                  maxHeight: '300px',
+                  height: item.noteCoverHeight + 'px',
+                  borderRadius: '8px',
+                }"
+                @load="handleLoad(item)"
+              ></el-image>
+              <div style="padding: 14px">
+                <el-skeleton-item variant="h3" style="width: 100%" />
+                <div style="display: flex; align-items: center; margin-top: 2px; height: 16px">
+                  <el-skeleton style="--el-skeleton-circle-size: 20px">
+                    <template #template>
+                      <el-skeleton-item variant="circle" />
+                    </template>
+                  </el-skeleton>
+                  <el-skeleton-item variant="text" style="margin-left: 10px" />
+                </div>
+              </div>
+            </template>
+
+            <template #default>
+              <div class="card" style="max-width: 240px">
+                <el-image
+                  :src="item.noteCover"
+                  :style="{
+                    width: '240px',
+                    maxHeight: '300px',
+                    height: item.noteCoverHeight + 'px',
+                    borderRadius: '8px',
+                  }"
+                  fit="cover"
+                  class="note-cover"
+                  role="button"
+                  tabindex="0"
+                  :aria-label="'查看笔记：' + item.title"
+                  @keydown.enter.prevent="toMain(item.id)"
+                  @keydown.space.prevent="toMain(item.id)"
+                  @click="toMain(item.id)"
+                ></el-image>
+                <div class="footer">
+                  <button type="button" class="title note-title" @click.stop="toMain(item.id)">
+                    <span>{{ item.title }}</span>
+                  </button>
+                  <div class="author-wrapper">
+                    <RouterLink class="author author-link" :to="{ name: 'user', query: { uid: item.uid } }" @click.stop>
+                      <img alt="用户头像" class="author-avatar author-link__avatar" :src="item.avatar" />
+                      <span class="name author-link__name">{{ item.username }}</span>
+                    </RouterLink>
+                    <NoteLikeButton :note-id="item.id" :author-id="item.uid" :is-like="item.isLike" :like-count="item.likeCount" />
+                  </div>
+                </div>
+              </div>
+            </template>
+          </el-skeleton>
+        </template>
+      </Waterfall>
+
+      <div class="feeds-loading" v-show="loading && !topLoading">
+        <Loading style="width: 1.2em; height: 1.2em"></Loading>
+      </div>
+      <div class="feeds-end" v-show="isEnd">······ 已经到底了 ·····</div>
+    </div>
+    <FloatingBtn @click-refresh="refresh"></FloatingBtn>
+    <Main
+      v-show="mainShow"
+      :nid="nid"
+      @click-main="close"
+    ></Main>
+  </div>
+</template>
 
 <script lang="ts" setup>
 import { Waterfall } from "vue-waterfall-plugin-next";
