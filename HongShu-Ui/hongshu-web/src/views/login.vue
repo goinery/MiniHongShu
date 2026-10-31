@@ -380,8 +380,94 @@ a {
           border: 1px solid transparent;
           transition: border-color 0.2s, background 0.2s;
         }
-}
-}
-}
+
+        .auth-code:focus-within,
+        .phone:focus-within {
+          background: #fff;
+          border-color: var(--el-color-primary);
+        }
+
+        .auth-code input,
+        .phone input {
+          font-size: 16px;
+          width: 100%;
+          height: 100%;
+          caret-color: var(--el-color-primary);
+          color: #333;
+          background: transparent;
+        }
+
+        .err-msg {
+          margin-top: 9.5px;
+          height: 16px;
+          line-height: 16px;
+          color: #f56c6c;
+          font-size: 13px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .submit {
+          margin-top: 24px;
+          height: 48px;
+          background: var(--el-color-primary);
+          color: var(--brand-color-contrast);
+          border-radius: 999px;
+          font-size: 16px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s;
+          width: 100%;
+        }
+
+        .submit:hover:not(:disabled) {
+          opacity: 0.92;
+        }
+
+        .submit:active:not(:disabled) {
+          transform: scale(0.98);
+        }
+
+        .submit:disabled {
+          cursor: not-allowed;
+          opacity: 0.7;
+        }
+      }
+
+      .agreements {
+        width: 280px;
+        position: relative;
+        margin-top: 16px;
+        padding-left: 18px;
+        font-size: 12px;
+        color: rgba(51, 51, 51, 0.6);
+        line-height: 120%;
+      }
+
+      .oauth-tip:after,
+      .oauth-tip:before {
+        margin-top: 20px;
+        display: block;
+        width: 50px;
+        height: 1px;
+        content: "";
+        background-color: rgba(0, 0, 0, 0.08);
+      }
+
+      .oauth-tip-line {
+        margin: 20px 12px 0;
+      }
+
+      .oauth-tip {
+        margin-top: 29px;
+        display: flex;
+        align-items: center;
+        font-weight: 400;
+        font-size: 14px;
+        color: rgba(51, 51, 51, 0.6);
+      }
+    }
+  }
 }
 </style>
