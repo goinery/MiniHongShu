@@ -381,4 +381,180 @@ public class DateUtilss {
         a.roll(Calendar.DATE, -1);
         return a.get(Calendar.DATE);
     }
+
+    /**
+     * 获取当前的年
+     *
+     */
+    public static Integer getYears() {
+        Calendar calendar = new GregorianCalendar(TimeZone
+                .getDefault());
+        return calendar.get(Calendar.YEAR);
+
+    }
+
+    /**
+     * 获取当前的月
+     *
+     */
+    public static Integer getMonth() {
+        Calendar calendar = new GregorianCalendar(TimeZone
+                .getDefault());
+        return calendar.get(Calendar.MONTH) + 1;
+
+    }
+
+    /**
+     * 获取当前天
+     *
+     */
+    public static Integer getDay() {
+        Calendar calendar = new GregorianCalendar(TimeZone
+                .getDefault());
+        return calendar.get(Calendar.DAY_OF_MONTH);
+    }
+
+    /**
+     * wx支付的过期时间
+     *
+     */
+    @SuppressWarnings("unused")
+    public static String getTime(double hour) {
+        Calendar calendar = new GregorianCalendar(TimeZone.getDefault());
+        long time = (long) (System.currentTimeMillis() + hour * 60 * 60 * 1000L);
+        Date date = new Date(time);
+        SimpleDateFormat formate = new SimpleDateFormat("yyyyMMddHHmmss");
+        return formate.format(date);
+    }
+
+    /**
+     * 获得当前日期与本周日相差的天数
+     *
+     */
+    private static int getMondayPlus() {
+        Calendar cd = Calendar.getInstance();
+        // 获得今天是一周的第几天，星期日是第一天，星期二是第二天......
+        // 因为按中国礼拜一作为第一天所以这里减1
+        int dayOfWeek = cd.get(Calendar.DAY_OF_WEEK) - 1;
+        if (dayOfWeek == 1) {
+            return 0;
+        } else {
+            return 1 - dayOfWeek;
+        }
+    }
+
+    /**
+     * 获取几天之后的日期
+     *
+     * @param date yyyy-MM-dd HH:mm:ss
+     * @param day  加减的天数
+     */
+    public static Date getDate(String date, int day) {
+        SimpleDateFormat formate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        Calendar cal = Calendar.getInstance();
+        try {
+            Date beforeDate = formate.parse(date);
+            cal.setTime(beforeDate);
+            cal.add(Calendar.DAY_OF_MONTH, day);
+            //cal.set(beforeDate.getYear(), beforeDate.getMonth(), beforeDate.getDay()+day, beforeDate.getHours(),beforeDate.getSeconds(), beforeDate.getMinutes());
+            return cal.getTime();
+        } catch (ParseException e) {
+            org.slf4j.LoggerFactory.getLogger(DateUtilss.class).warn("操作失败", e);
+        }
+        return null;
+    }
+
+    /**
+     * 获取某个日期 在加上 秒数的时间
+     *
+     * @param beforeDate yyyy-MM-dd HH:mm:ss
+     * @param timeSecond 加减的秒数
+     */
+    public static String getDateStr(Date beforeDate, Long timeSecond) {
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        try {
+            // 返回毫秒数 + 添加的毫秒数
+            Long time = beforeDate.getTime() + timeSecond * 1000;
+            return format.format(time);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
+        return "";
+    }
+
+    /**
+     * 把date转换成字符串
+     *
+     * @param code 例如  yyyy-MM-dd 00:00:00
+     */
+    public static String formateDate(Date date, String code) {
+        SimpleDateFormat formate = new SimpleDateFormat(code);
+        return formate.format(date);
+
+    }
+
+    /**
+     * 获取过去N天内的日期数组
+     *
+     * @param intervals intervals天内
+     * @param formatStr 格式化字符串   yyyy-MM-dd
+     * @return 日期数组
+     */
+    public static ArrayList<String> getDaysByN(int intervals, String formatStr) {
+        ArrayList<String> pastDaysList = new ArrayList<>();
+        for (int i = intervals - 1; i >= 0; i--) {
+            pastDaysList.add(getPastDate(i, formatStr));
+        }
+        return pastDaysList;
+    }
+
+    /**
+     * 获取过去第几天的日期
+     *
+     */
+    public static String getPastDate(int past, String formatStr) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.DAY_OF_YEAR, calendar.get(Calendar.DAY_OF_YEAR) - past);
+        Date today = calendar.getTime();
+        return formateDate(today, formatStr);
+    }
+
+    /**
+     * 获取某个时间段内所有日期
+     *
+     */
+    public static List<String> getDayBetweenDates(String begin, String end) {
+        Date dBegin = strToDateTime(begin);
+        Date dEnd = strToDateTime(end);
+        List<String> lDate = new ArrayList<>();
+        SimpleDateFormat sd = new SimpleDateFormat("yyyy-MM-dd");
+        lDate.add(sd.format(dBegin));
+        Calendar calBegin = Calendar.getInstance();
+        // 使用给定的 Date 设置此 Calendar 的时间
+        calBegin.setTime(dBegin);
+        Calendar calEnd = Calendar.getInstance();
+        // 使用给定的 Date 设置此 Calendar 的时间
+        calEnd.setTime(dEnd);
+        // 测试此日期是否在指定日期之后
+        while (dEnd.after(calBegin.getTime())) {
+            // 根据日历的规则，为给定的日历字段添加或减去指定的时间量
+            calBegin.add(Calendar.DAY_OF_MONTH, 1);
+            lDate.add(sd.format(calBegin.getTime()));
+        }
+        return lDate;
+    }
+
+    /**
+     * 获取服务器启动时间
+     */
+    public static Date getServerStartDate() {
+        return DateUtils.getServerStartDate();
+    }
+
+    /**
+     * 计算两个时间差
+     */
+    public static String getDatePoor(Date endDate, Date nowDate) {
+        return DateUtils.timeDistance(endDate, nowDate);
+    }
 }
