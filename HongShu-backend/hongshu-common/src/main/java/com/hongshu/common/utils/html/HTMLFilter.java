@@ -294,4 +294,193 @@ public final class HTMLFilter {
         Matcher m = regex_pattern.matcher(s);
         return m.replaceAll(replacement);
     }
+
+    private String processTag(final String s) {
+        // ending tags
+        Matcher m = P_END_TAG.matcher(s);
+        if (m.find()) {
+            final String name = m.group(1).toLowerCase();
+            if (allowed(name)) {
+                if (!inArray(name, vSelfClosingTags)) {
+                    if (vTagCounts.containsKey(name)) {
+                        vTagCounts.put(name, vTagCounts.get(name) - 1);
+                        return "</" + name + ">";
+                    }
+                }
+            }
+        }
+
+        // starting tags
+        m = P_START_TAG.matcher(s);
+        if (m.find()) {
+            final String name = m.group(1).toLowerCase();
+            final String body = m.group(2);
+            String ending = m.group(3);
+
+            // debug( "in a starting tag, name='" + name + "'; body='" + body + "'; ending='" + ending + "'" );
+            if (allowed(name)) {
+                final StringBuilder params = new StringBuilder();
+
+                final Matcher m2 = P_QUOTED_ATTRIBUTES.matcher(body);
+                final Matcher m3 = P_UNQUOTED_ATTRIBUTES.matcher(body);
+                final List<String> paramNames = new ArrayList<>();
+                final List<String> paramValues = new ArrayList<>();
+                while (m2.find()) {
+                    paramNames.add(m2.group(1)); // ([a-z0-9]+)
+                    paramValues.add(m2.group(3)); // (.*?)
+                }
+                while (m3.find()) {
+                    paramNames.add(m3.group(1)); // ([a-z0-9]+)
+                    paramValues.add(m3.group(3)); // ([^\"\\s']+)
+                }
+
+                String paramName, paramValue;
+                for (int ii = 0; ii < paramNames.size(); ii++) {
+                    paramName = paramNames.get(ii).toLowerCase();
+                    paramValue = paramValues.get(ii);
+
+                    if (allowedAttribute(name, paramName)) {
+                        if (inArray(paramName, vProtocolAtts)) {
+                            paramValue = processParamProtocol(paramValue);
+                        }
+                        params.append(' ').append(paramName).append("=\\\"").append(paramValue).append("\\\"");
+                    }
+                }
+
+                if (inArray(name, vSelfClosingTags)) {
+                    ending = " /";
+                }
+
+                if (inArray(name, vNeedClosingTags)) {
+                    ending = "";
+                }
+
+                if (ending == null || ending.isEmpty()) {
+                    if (vTagCounts.containsKey(name)) {
+                        vTagCounts.put(name, vTagCounts.get(name) + 1);
+                    } else {
+                        vTagCounts.put(name, 1);
+                    }
+                } else {
+                    ending = " /";
+                }
+                return "<" + name + params + ending + ">";
+            } else {
+                return "";
+            }
+        }
+
+        // comments
+        m = P_COMMENT.matcher(s);
+        if (!stripComment && m.find()) {
+            return "<" + m.group() + ">";
+        }
+
+        return "";
+    }
+
+    private String processParamProtocol(String s) {
+        s = decodeEntities(s);
+        final Matcher m = P_PROTOCOL.matcher(s);
+        if (m.find()) {
+            final String protocol = m.group(1);
+            if (!inArray(protocol, vAllowedProtocols)) {
+                // bad protocol, turn into local anchor link instead
+                s = "#" + s.substring(protocol.length() + 1);
+                if (s.startsWith("#//")) {
+                    s = "#" + s.substring(3);
+                }
+            }
+        }
+
+        return s;
+    }
+
+    private String decodeEntities(String s) {
+        StringBuilder buf = new StringBuilder();
+
+        Matcher m = P_ENTITY.matcher(s);
+        while (m.find()) {
+            final String match = m.group(1);
+            final int decimal = Integer.decode(match);
+            m.appendReplacement(buf, Matcher.quoteReplacement(chr(decimal)));
+        }
+        m.appendTail(buf);
+        s = buf.toString();
+
+        s = decodeHexEntities(s, P_ENTITY_UNICODE);
+        s = decodeHexEntities(s, P_ENCODE);
+        return validateEntities(s);
+    }
+
+    private static String decodeHexEntities(String s, Pattern pattern) {
+        StringBuilder buf = new StringBuilder();
+        Matcher m = pattern.matcher(s);
+        while (m.find()) {
+            final String match = m.group(1);
+            final int decimal = Integer.valueOf(match, 16);
+            m.appendReplacement(buf, Matcher.quoteReplacement(chr(decimal)));
+        }
+        m.appendTail(buf);
+        return buf.toString();
+    }
+
+    private String validateEntities(final String s) {
+        StringBuilder buf = new StringBuilder();
+
+        // validate entities throughout the string
+        Matcher m = P_VALID_ENTITIES.matcher(s);
+        while (m.find()) {
+            final String one = m.group(1); // ([^&;]*)
+            final String two = m.group(2); // (?=(;|&|$))
+            m.appendReplacement(buf, Matcher.quoteReplacement(checkEntity(one, two)));
+        }
+        m.appendTail(buf);
+
+        return encodeQuotes(buf.toString());
+    }
+
+    private String encodeQuotes(final String s) {
+        if (encodeQuotes) {
+            StringBuilder buf = new StringBuilder();
+            Matcher m = P_VALID_QUOTES.matcher(s);
+            while (m.find()) {
+                final String one = m.group(1); // (>|^)
+                final String two = m.group(2); // ([^<]+?)
+                final String three = m.group(3); // (<|$)
+                // 不替换双引号为&quot;，防止json格式无效 regexReplace(P_QUOTE, "&quot;", two)
+                m.appendReplacement(buf, Matcher.quoteReplacement(one + two + three));
+            }
+            m.appendTail(buf);
+            return buf.toString();
+        } else {
+            return s;
+        }
+    }
+
+    private String checkEntity(final String preamble, final String term) {
+
+        return ";".equals(term) && isValidEntity(preamble) ? '&' + preamble : "&amp;" + preamble;
+    }
+
+    private boolean isValidEntity(final String entity) {
+        return inArray(entity, vAllowedEntities);
+    }
+
+    private static boolean inArray(final String s, final String[] array) {
+        for (String item : array) {
+            if (item != null && item.equals(s)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean allowed(final String name) {
+        return (vAllowed.isEmpty() || vAllowed.containsKey(name)) && !inArray(name, vDisallowed);
+    }
+
+    private boolean allowedAttribute(final String name, final String paramName) {
+        return allowed(name) && (vAllowed.isEmpty() || vAllowed.get(name).contains(paramName));
+    }
 }
