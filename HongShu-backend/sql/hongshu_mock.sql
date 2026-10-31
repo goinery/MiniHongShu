@@ -996,3 +996,128 @@ SELECT @hongshu_fix_menu, '会员删除', 2003, 4, '#', 1, 0, 'F', '0', '0', 'we
 WHERE NOT EXISTS (SELECT 1 FROM sys_menu WHERE parent_id = 2003 AND perms = 'web:member:remove');
 
 SET @hongshu_fix_menu = (SELECT COALESCE(MAX(menu_id), 0) + 1 FROM sys_menu);
+INSERT INTO sys_menu (menu_id, menu_name, parent_id, order_num, path, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time)
+SELECT @hongshu_fix_menu, '会员导出', 2003, 5, '#', 1, 0, 'F', '0', '0', 'web:member:export', '#', 'admin', @mock_now
+WHERE NOT EXISTS (SELECT 1 FROM sys_menu WHERE parent_id = 2003 AND perms = 'web:member:export');
+
+SET @hongshu_fix_menu = (SELECT COALESCE(MAX(menu_id), 0) + 1 FROM sys_menu);
+INSERT INTO sys_menu (menu_id, menu_name, parent_id, order_num, path, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time)
+SELECT @hongshu_fix_menu, '笔记查看', 2017, 1, '#', 1, 0, 'F', '0', '0', 'web:note:query', '#', 'admin', @mock_now
+WHERE NOT EXISTS (SELECT 1 FROM sys_menu WHERE parent_id = 2017 AND perms = 'web:note:query');
+
+SET @hongshu_fix_menu = (SELECT COALESCE(MAX(menu_id), 0) + 1 FROM sys_menu);
+INSERT INTO sys_menu (menu_id, menu_name, parent_id, order_num, path, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time)
+SELECT @hongshu_fix_menu, '笔记新增', 2017, 2, '#', 1, 0, 'F', '0', '0', 'web:note:add', '#', 'admin', @mock_now
+WHERE NOT EXISTS (SELECT 1 FROM sys_menu WHERE parent_id = 2017 AND perms = 'web:note:add');
+
+SET @hongshu_fix_menu = (SELECT COALESCE(MAX(menu_id), 0) + 1 FROM sys_menu);
+INSERT INTO sys_menu (menu_id, menu_name, parent_id, order_num, path, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time)
+SELECT @hongshu_fix_menu, '笔记修改', 2017, 3, '#', 1, 0, 'F', '0', '0', 'web:note:edit', '#', 'admin', @mock_now
+WHERE NOT EXISTS (SELECT 1 FROM sys_menu WHERE parent_id = 2017 AND perms = 'web:note:edit');
+
+SET @hongshu_fix_menu = (SELECT COALESCE(MAX(menu_id), 0) + 1 FROM sys_menu);
+INSERT INTO sys_menu (menu_id, menu_name, parent_id, order_num, path, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time)
+SELECT @hongshu_fix_menu, '笔记删除', 2017, 4, '#', 1, 0, 'F', '0', '0', 'web:note:remove', '#', 'admin', @mock_now
+WHERE NOT EXISTS (SELECT 1 FROM sys_menu WHERE parent_id = 2017 AND perms = 'web:note:remove');
+
+SET @hongshu_fix_menu = (SELECT COALESCE(MAX(menu_id), 0) + 1 FROM sys_menu);
+INSERT INTO sys_menu (menu_id, menu_name, parent_id, order_num, path, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time)
+SELECT @hongshu_fix_menu, '笔记导出', 2017, 5, '#', 1, 0, 'F', '0', '0', 'web:note:export', '#', 'admin', @mock_now
+WHERE NOT EXISTS (SELECT 1 FROM sys_menu WHERE parent_id = 2017 AND perms = 'web:note:export');
+
+SET @hongshu_fix_menu = (SELECT COALESCE(MAX(menu_id), 0) + 1 FROM sys_menu);
+INSERT INTO sys_menu (menu_id, menu_name, parent_id, order_num, path, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time)
+SELECT @hongshu_fix_menu, '审核查看', 2019, 1, '#', 1, 0, 'F', '0', '0', 'web:note:query', '#', 'admin', @mock_now
+WHERE NOT EXISTS (SELECT 1 FROM sys_menu WHERE parent_id = 2019 AND perms = 'web:note:query');
+
+SET @hongshu_fix_menu = (SELECT COALESCE(MAX(menu_id), 0) + 1 FROM sys_menu);
+INSERT INTO sys_menu (menu_id, menu_name, parent_id, order_num, path, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time)
+SELECT @hongshu_fix_menu, '审核审批', 2019, 2, '#', 1, 0, 'F', '0', '0', 'web:note:audit', '#', 'admin', @mock_now
+WHERE NOT EXISTS (SELECT 1 FROM sys_menu WHERE parent_id = 2019 AND perms = 'web:note:audit');
+
+SET @hongshu_fix_menu = (SELECT COALESCE(MAX(menu_id), 0) + 1 FROM sys_menu);
+INSERT INTO sys_menu (menu_id, menu_name, parent_id, order_num, path, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time)
+SELECT @hongshu_fix_menu, '专辑查看', 2020, 1, '#', 1, 0, 'F', '0', '0', 'web:album:query', '#', 'admin', @mock_now
+WHERE NOT EXISTS (SELECT 1 FROM sys_menu WHERE parent_id = 2020 AND perms = 'web:album:query');
+
+SET @hongshu_fix_menu = (SELECT COALESCE(MAX(menu_id), 0) + 1 FROM sys_menu);
+INSERT INTO sys_menu (menu_id, menu_name, parent_id, order_num, path, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time)
+SELECT @hongshu_fix_menu, '专辑新增', 2020, 2, '#', 1, 0, 'F', '0', '0', 'web:album:add', '#', 'admin', @mock_now
+WHERE NOT EXISTS (SELECT 1 FROM sys_menu WHERE parent_id = 2020 AND perms = 'web:album:add');
+
+SET @hongshu_fix_menu = (SELECT COALESCE(MAX(menu_id), 0) + 1 FROM sys_menu);
+INSERT INTO sys_menu (menu_id, menu_name, parent_id, order_num, path, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time)
+SELECT @hongshu_fix_menu, '专辑修改', 2020, 3, '#', 1, 0, 'F', '0', '0', 'web:album:edit', '#', 'admin', @mock_now
+WHERE NOT EXISTS (SELECT 1 FROM sys_menu WHERE parent_id = 2020 AND perms = 'web:album:edit');
+
+SET @hongshu_fix_menu = (SELECT COALESCE(MAX(menu_id), 0) + 1 FROM sys_menu);
+INSERT INTO sys_menu (menu_id, menu_name, parent_id, order_num, path, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time)
+SELECT @hongshu_fix_menu, '专辑删除', 2020, 4, '#', 1, 0, 'F', '0', '0', 'web:album:remove', '#', 'admin', @mock_now
+WHERE NOT EXISTS (SELECT 1 FROM sys_menu WHERE parent_id = 2020 AND perms = 'web:album:remove');
+
+SET @hongshu_fix_menu = (SELECT COALESCE(MAX(menu_id), 0) + 1 FROM sys_menu);
+INSERT INTO sys_menu (menu_id, menu_name, parent_id, order_num, path, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time)
+SELECT @hongshu_fix_menu, '评论查看', 2023, 1, '#', 1, 0, 'F', '0', '0', 'web:comment:query', '#', 'admin', @mock_now
+WHERE NOT EXISTS (SELECT 1 FROM sys_menu WHERE parent_id = 2023 AND perms = 'web:comment:query');
+
+SET @hongshu_fix_menu = (SELECT COALESCE(MAX(menu_id), 0) + 1 FROM sys_menu);
+INSERT INTO sys_menu (menu_id, menu_name, parent_id, order_num, path, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time)
+SELECT @hongshu_fix_menu, '评论删除', 2023, 2, '#', 1, 0, 'F', '0', '0', 'web:comment:remove', '#', 'admin', @mock_now
+WHERE NOT EXISTS (SELECT 1 FROM sys_menu WHERE parent_id = 2023 AND perms = 'web:comment:remove');
+
+SET @hongshu_fix_menu = (SELECT COALESCE(MAX(menu_id), 0) + 1 FROM sys_menu);
+INSERT INTO sys_menu (menu_id, menu_name, parent_id, order_num, path, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time)
+SELECT @hongshu_fix_menu, '标签查看', 2025, 1, '#', 1, 0, 'F', '0', '0', 'web:tag:query', '#', 'admin', @mock_now
+WHERE NOT EXISTS (SELECT 1 FROM sys_menu WHERE parent_id = 2025 AND perms = 'web:tag:query');
+
+SET @hongshu_fix_menu = (SELECT COALESCE(MAX(menu_id), 0) + 1 FROM sys_menu);
+INSERT INTO sys_menu (menu_id, menu_name, parent_id, order_num, path, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time)
+SELECT @hongshu_fix_menu, '标签新增', 2025, 2, '#', 1, 0, 'F', '0', '0', 'web:tag:add', '#', 'admin', @mock_now
+WHERE NOT EXISTS (SELECT 1 FROM sys_menu WHERE parent_id = 2025 AND perms = 'web:tag:add');
+
+SET @hongshu_fix_menu = (SELECT COALESCE(MAX(menu_id), 0) + 1 FROM sys_menu);
+INSERT INTO sys_menu (menu_id, menu_name, parent_id, order_num, path, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time)
+SELECT @hongshu_fix_menu, '标签修改', 2025, 3, '#', 1, 0, 'F', '0', '0', 'web:tag:edit', '#', 'admin', @mock_now
+WHERE NOT EXISTS (SELECT 1 FROM sys_menu WHERE parent_id = 2025 AND perms = 'web:tag:edit');
+
+SET @hongshu_fix_menu = (SELECT COALESCE(MAX(menu_id), 0) + 1 FROM sys_menu);
+INSERT INTO sys_menu (menu_id, menu_name, parent_id, order_num, path, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time)
+SELECT @hongshu_fix_menu, '标签删除', 2025, 4, '#', 1, 0, 'F', '0', '0', 'web:tag:remove', '#', 'admin', @mock_now
+WHERE NOT EXISTS (SELECT 1 FROM sys_menu WHERE parent_id = 2025 AND perms = 'web:tag:remove');
+
+SET @hongshu_fix_menu = (SELECT COALESCE(MAX(menu_id), 0) + 1 FROM sys_menu);
+INSERT INTO sys_menu (menu_id, menu_name, parent_id, order_num, path, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time)
+SELECT @hongshu_fix_menu, '会员登录日志删除', 2029, 1, '#', 1, 0, 'F', '0', '0', 'web:logininfor:remove', '#', 'admin', @mock_now
+WHERE NOT EXISTS (SELECT 1 FROM sys_menu WHERE parent_id = 2029 AND perms = 'web:logininfor:remove');
+
+SET @hongshu_fix_menu = (SELECT COALESCE(MAX(menu_id), 0) + 1 FROM sys_menu);
+INSERT INTO sys_menu (menu_id, menu_name, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time)
+SELECT @hongshu_fix_menu, '用户反馈', 2021, 1, 'feedback', 'web/feedback/index', 1, 0, 'C', '0', '0', 'web:feedback:list', 'message', 'admin', @mock_now
+WHERE NOT EXISTS (SELECT 1 FROM sys_menu WHERE component = 'web/feedback/index');
+SET @hongshu_feedback_menu = (SELECT MIN(menu_id) FROM sys_menu WHERE component = 'web/feedback/index');
+
+SET @hongshu_fix_menu = (SELECT COALESCE(MAX(menu_id), 0) + 1 FROM sys_menu);
+INSERT INTO sys_menu (menu_id, menu_name, parent_id, order_num, path, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time)
+SELECT @hongshu_fix_menu, '处理反馈', @hongshu_feedback_menu, 1, '#', 1, 0, 'F', '0', '0', 'web:feedback:edit', '#', 'admin', @mock_now
+WHERE NOT EXISTS (SELECT 1 FROM sys_menu WHERE parent_id = @hongshu_feedback_menu AND perms = 'web:feedback:edit');
+
+UPDATE sys_menu SET menu_name = '导航管理' WHERE menu_id = 2001;
+UPDATE sys_menu SET menu_name = '登录日志' WHERE menu_id = 2029;
+UPDATE sys_menu SET order_num = -1 WHERE menu_id = 2022;
+
+-- 全新基础组织和待初始化管理员，不携带历史用户、日志或本地图片路径。
+INSERT INTO sys_dept (dept_id, parent_id, ancestors, dept_name, order_num, status, del_flag, create_by, create_time)
+VALUES (100, 0, '0', '测试社区', 0, '0', '0', 'mock', @mock_now),
+       (101, 100, '0,100', '运营中心', 1, '0', '0', 'mock', @mock_now),
+       (103, 101, '0,100,101', '研发部门', 1, '0', '0', 'mock', @mock_now),
+       (105, 101, '0,100,101', '测试部门', 2, '0', '0', 'mock', @mock_now);
+INSERT INTO sys_user (user_id, dept_id, user_name, nick_name, user_type, avatar, password, status, del_flag, create_by, create_time)
+VALUES (1, 103, 'admin', '管理员', '00', CONCAT('https://picsum.photos/seed/', @mock_seed, '-admin/200/200'),
+        '{ADMIN_INIT_REQUIRED}', '1', '0', 'mock', @mock_now);
+INSERT INTO sys_user_role (user_id, role_id) VALUES (1, 1);
+INSERT INTO sys_user_post (user_id, post_id) VALUES (1, 1);
+INSERT INTO sys_role_dept (role_id, dept_id) VALUES (2, 100), (2, 101), (2, 105);
+-- 普通角色默认无业务权限，由管理员在角色管理中分配。
+INSERT INTO t_system_config (uid, status, create_time, update_time, start_email_notification,
+                            editor_model, open_dashboard_notification, open_email_activate, search_model)
+VALUES ('mock-system-config', 1, @mock_now, @mock_now, '0', '0', '0', '0', '0');
