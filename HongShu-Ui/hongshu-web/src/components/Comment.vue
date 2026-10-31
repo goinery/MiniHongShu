@@ -344,4 +344,131 @@ watch(
   }
 );
 </script>
-<style lang="less" scoped></style>
+<style lang="less" scoped>
+.comments-container {
+  padding: 16px;
+
+  .total {
+    font-size: 14px;
+    color: rgba(51, 51, 51, 0.6);
+    margin-left: 8px;
+    margin-bottom: 12px;
+  }
+
+  .list-container {
+    position: relative;
+
+    .parent-comment {
+      margin-bottom: 16px;
+
+      .comment-item {
+        position: relative;
+        display: flex;
+        padding: 8px;
+
+        .comment-inner-container {
+          position: relative;
+          display: flex;
+          z-index: var(--layer-local-content);
+          width: 100%;
+          flex-shrink: 0;
+
+          .avatar {
+            flex: 0 0 auto;
+
+            .avatar-item {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              cursor: pointer;
+              border-radius: 100%;
+              border: 1px solid rgba(0, 0, 0, 0.08);
+              object-fit: cover;
+              width: 40px;
+              height: 40px;
+            }
+          }
+
+          .right {
+            margin-left: 12px;
+            display: flex;
+            flex-direction: column;
+            font-size: 14px;
+            flex-grow: 1;
+
+            .author-wrapper {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+
+              .author {
+                display: flex;
+                align-items: center;
+
+                .name {
+                  color: rgba(51, 51, 51, 0.6);
+                  line-height: 18px;
+                }
+              }
+            }
+
+            .content {
+              margin-top: 4px;
+              line-height: 140%;
+              color: #333;
+            }
+
+            .info {
+              display: flex;
+              flex-direction: column;
+              justify-content: space-between;
+              font-size: 12px;
+              line-height: 16px;
+              color: rgba(51, 51, 51, 0.6);
+
+              .date {
+                margin: 8px 0;
+              }
+
+              .interactions {
+                display: flex;
+                margin-left: -2px;
+
+                .like-wrapper {
+                  padding: 0 4px;
+                  color: rgba(51, 51, 51, 0.8);
+                  font-weight: 500;
+
+                  position: relative;
+                  cursor: pointer;
+                  display: flex;
+                  align-items: center;
+
+                  .count {
+                    margin-left: 2px;
+                    font-weight: 500;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+
+      .reply-container {
+        margin-left: 52px;
+
+        .show-more {
+          margin-left: 44px;
+          height: 32px;
+          line-height: 32px;
+          color: #13386c;
+          cursor: pointer;
+          font-weight: 500;
+          font-size: 14px;
+        }
+      }
+    }
+  }
+}
+</style>
