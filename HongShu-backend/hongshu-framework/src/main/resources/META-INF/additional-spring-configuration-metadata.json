@@ -1,0 +1,30 @@
+{
+  "properties": [
+    {
+      "name": "spring.datasource.druid.slave.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "description": "Whether to enable the optional slave data source.",
+      "sourceType": "com.hongshu.framework.config.DruidConfig"
+    },
+    {
+      "name": "hongshu.profile",
+      "type": "java.lang.String",
+      "description": "Root directory for uploaded files.",
+      "sourceType": "com.hongshu.common.config.HongshuConfig"
+    },
+    {
+      "name": "hongshu.address-enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "description": "Whether to look up geographic locations for IP addresses.",
+      "sourceType": "com.hongshu.common.config.HongshuConfig"
+    },
+    {
+      "name": "hongshu.captcha-type",
+      "type": "java.lang.String",
+      "description": "Captcha type: math or char.",
+      "sourceType": "com.hongshu.common.config.HongshuConfig"
+    }
+  ]
+}
