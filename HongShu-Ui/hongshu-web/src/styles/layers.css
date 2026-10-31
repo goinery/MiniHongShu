@@ -1,0 +1,11 @@
+:root {
+  /* layers.ts 在启动时写入并持续更新数值；初始化前沿用 z-index 的默认行为。 */
+  --layer-feedback: auto;
+}
+
+/* 消息挂载到 body，不能被应用或弹窗的局部层叠上下文限制。 */
+.el-message,
+.el-notification {
+  /* 组件会写入行内 z-index；此处统一覆盖，业务代码不再逐条调整消息。 */
+  z-index: var(--layer-feedback) !important;
+}

@@ -1,0 +1,75 @@
+/* 可交互区域显式标记，避免把整张卡片变成链接而拦截作者、点赞操作。 */
+a[href],
+.note-cover,
+.note-title {
+  cursor: pointer;
+}
+
+/* 已关注按钮统一使用主题色描边和浅色背景。 */
+.el-button.followed-button.is-plain {
+  --el-button-text-color: var(--el-color-primary);
+  --el-button-bg-color: var(--el-color-primary-light-9);
+  --el-button-border-color: var(--el-color-primary);
+  --el-button-hover-text-color: var(--el-color-primary);
+  --el-button-hover-bg-color: var(--el-color-primary-light-8);
+  --el-button-hover-border-color: var(--el-color-primary);
+  --el-button-active-text-color: var(--el-color-primary);
+  --el-button-active-bg-color: var(--el-color-primary-light-7);
+  --el-button-active-border-color: var(--el-color-primary);
+}
+
+button.note-title {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+}
+
+.note-cover:focus-visible,
+.note-title:focus-visible {
+  outline: 2px solid var(--el-color-primary);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* 作者链接在卡片、详情及用户列表中共用反馈，不改变布局尺寸。 */
+a.author-link {
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.author-link__name {
+  transition: color 160ms ease;
+}
+
+.author-link__avatar {
+  outline: 2px solid transparent;
+  outline-offset: -2px;
+  transition: outline-color 160ms ease, filter 160ms ease;
+}
+
+/* 交互态优先于各页面及深色主题中已有的昵称颜色。 */
+a.author-link:is(:hover, :focus-visible).author-link__name,
+a.author-link:is(:hover, :focus-visible) .author-link__name {
+  color: var(--el-color-primary) !important;
+}
+
+a.author-link:is(:hover, :focus-visible) .author-link__avatar {
+  outline-color: var(--el-color-primary);
+  filter: brightness(1.08);
+}
+
+a.author-link:focus-visible {
+  outline: 2px solid var(--el-color-primary);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .author-link__name,
+  .author-link__avatar {
+    transition: none;
+  }
+}
