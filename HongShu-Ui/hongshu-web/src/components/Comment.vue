@@ -1,4 +1,146 @@
-<template></template>
+<template>
+  <div class="comments-container">
+    <div class="total">共{{ computedTotal }}条评论</div>
+    <div class="list-container">
+      <div class="parent-comment" v-for="(oneComment, oneIndex) in dataList" :key="oneIndex">
+        <div class="comment-item">
+          <div class="comment-inner-container">
+            <div class="avatar">
+              <img alt="用户头像" class="avatar-item" :src="oneComment.avatar" />
+            </div>
+            <div class="right">
+              <div class="author-wrapper">
+                <div class="author">
+                  <a class="name">{{ oneComment.username }}</a>
+                </div>
+              </div>
+              <div class="content">{{ oneComment.content }}</div>
+
+              <div class="info">
+                <div class="date">
+                  <span>{{ oneComment.time }}</span>
+                </div>
+                <div class="interactions">
+                  <div class="like">
+                    <span
+                      class="like-wrapper"
+                      v-if="oneComment.isLike"
+                      @click="likeComment(oneComment, -1, oneIndex, -1)"
+                    >
+                      <i
+                        class="iconfont icon-follow-fill"
+                        :style="{ width: '1em', height: '1em', color: oneComment.isLike ? 'red' : 'black' }"
+                        v-if="oneComment.isLike"
+                      >
+                      </i>
+                      <i class="iconfont icon-follow" style="width: 1em; height: 1em" v-else></i>
+                      <span class="count">{{ oneComment.likeCount }}</span>
+                    </span>
+                    <span class="like-wrapper" v-else @click="likeComment(oneComment, 1, oneIndex, -1)">
+                      <i class="iconfont icon-follow" style="width: 1em; height: 1em"></i>
+                      <span class="count">{{ oneComment.likeCount }}</span>
+                    </span>
+                  </div>
+                  <div class="reply" @click="saveComment(oneComment, oneIndex, 0)">
+                    <span class="like-wrapper">
+                      <ChatRound style="width: 1.2em; height: 1.2em" />
+                      <span class="count">{{ oneComment.twoCommentCount }}</span>
+                    </span>
+                  </div>
+                  <div class="reply" v-if="canDeleteComment(oneComment)" @click.stop="removeComment(oneComment, oneIndex, -1)">
+                    <span class="like-wrapper"><span class="count">删除</span></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="reply-container">
+          <div class="list-container">
+            <div class="comment-item" v-for="(twoComment, twoIndex) in oneComment.children" :key="twoIndex">
+              <div class="comment-inner-container">
+                <div class="avatar">
+                  <img alt="用户头像" class="avatar-item" :src="twoComment.avatar" />
+                </div>
+                <div class="right">
+                  <div class="author-wrapper">
+                    <div class="author">
+                      <a class="name">{{ twoComment.username }}</a>
+                    </div>
+                  </div>
+                  <div class="content">
+                    回复<span style="color: rgba(61, 61, 61, 0.8)">{{ twoComment.replyUsername }}: </span
+                    >{{ twoComment.content }}
+                  </div>
+
+                  <div class="info">
+                    <div class="date">
+                      <span>{{ twoComment.time }}</span>
+                    </div>
+                    <div class="interactions">
+                      <div class="like">
+                        <span
+                          class="like-wrapper"
+                          v-if="twoComment.isLike"
+                          @click="likeComment(twoComment, -1, oneIndex, twoIndex)"
+                        >
+                          <i
+                            class="iconfont icon-follow-fill"
+                            style="width: 1em; height: 1em; color: red"
+                          >
+                          </i>
+                          <span class="count">{{ twoComment.likeCount }}</span>
+                        </span>
+                        <span class="like-wrapper" @click="likeComment(twoComment, 1, oneIndex, twoIndex)" v-else>
+                          <i class="iconfont icon-follow" style="width: 1em; height: 1em"></i>
+                          <span class="count">{{ twoComment.likeCount }}</span>
+                        </span>
+                      </div>
+                      <div class="reply" @click="saveComment(twoComment, oneIndex, twoIndex)">
+                        <span class="like-wrapper">
+                          <ChatRound style="width: 1.2em; height: 1.2em" />
+                          <span class="count">回复</span>
+                        </span>
+                      </div>
+                      <div
+                        class="reply"
+                        v-if="canDeleteComment(twoComment)"
+                        @click.stop="removeComment(twoComment, oneIndex, twoIndex)"
+                      >
+                        <span class="like-wrapper"><span class="count">删除</span></span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div
+            class="show-more"
+            v-if="
+              oneComment.twoCommentCount >= commentTotalMap.get(oneComment.id) &&
+              oneComment.twoCommentCount > showTwoCommentCount
+            "
+            @click="loadTwoMore(oneComment.id, oneIndex)"
+          >
+            展开更多的回复
+          </div>
+          <div
+            class="show-more"
+            v-if="
+              oneComment.twoCommentCount < commentTotalMap.get(oneComment.id) &&
+              oneComment.twoCommentCount > showTwoCommentCount
+            "
+            @click="reback(oneComment.id, oneIndex)"
+          >
+            收起所有回复
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="padding-bottom: 100px"></div>
+  </div>
+</template>
 <script lang="ts" setup>
 import { ChatRound } from "@element-plus/icons-vue";
 import { ElMessage, ElMessageBox } from "element-plus";
