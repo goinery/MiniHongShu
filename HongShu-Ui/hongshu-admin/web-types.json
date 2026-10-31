@@ -1,0 +1,169 @@
+{
+  "$schema": "https://raw.githubusercontent.com/JetBrains/web-types/master/schema/web-types.json",
+  "name": "community-admin",
+  "version": "3.8.7",
+  "framework": "vue",
+  "contributions": {
+    "html": {
+      "vue-directives": [
+        {
+          "name": "hasPermi",
+          "description": "根据权限标识控制操作入口显示。",
+          "value": {
+            "type": "string[]"
+          }
+        },
+        {
+          "name": "hasRole",
+          "description": "根据角色标识控制操作入口显示。",
+          "value": {
+            "type": "string[]"
+          }
+        },
+        {
+          "name": "copyText",
+          "description": "复制绑定文本到剪贴板。",
+          "value": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    "css": {
+      "classes": [
+        {
+          "name": "el-avatar",
+          "description": "由已安装的 Element Plus / Quill 组件渲染。"
+        },
+        {
+          "name": "el-breadcrumb",
+          "description": "由已安装的 Element Plus / Quill 组件渲染。"
+        },
+        {
+          "name": "el-button",
+          "description": "由已安装的 Element Plus / Quill 组件渲染。"
+        },
+        {
+          "name": "el-date-editor",
+          "description": "由已安装的 Element Plus / Quill 组件渲染。"
+        },
+        {
+          "name": "el-dialog",
+          "description": "由已安装的 Element Plus / Quill 组件渲染。"
+        },
+        {
+          "name": "el-dialog__body",
+          "description": "由已安装的 Element Plus / Quill 组件渲染。"
+        },
+        {
+          "name": "el-dialog__footer",
+          "description": "由已安装的 Element Plus / Quill 组件渲染。"
+        },
+        {
+          "name": "el-dialog__header",
+          "description": "由已安装的 Element Plus / Quill 组件渲染。"
+        },
+        {
+          "name": "el-empty",
+          "description": "由已安装的 Element Plus / Quill 组件渲染。"
+        },
+        {
+          "name": "el-form-item",
+          "description": "由已安装的 Element Plus / Quill 组件渲染。"
+        },
+        {
+          "name": "el-form-item__content",
+          "description": "由已安装的 Element Plus / Quill 组件渲染。"
+        },
+        {
+          "name": "el-form-item__label",
+          "description": "由已安装的 Element Plus / Quill 组件渲染。"
+        },
+        {
+          "name": "el-image",
+          "description": "由已安装的 Element Plus / Quill 组件渲染。"
+        },
+        {
+          "name": "el-input",
+          "description": "由已安装的 Element Plus / Quill 组件渲染。"
+        },
+        {
+          "name": "el-popover",
+          "description": "由已安装的 Element Plus / Quill 组件渲染。"
+        },
+        {
+          "name": "el-popper",
+          "description": "由已安装的 Element Plus / Quill 组件渲染。"
+        },
+        {
+          "name": "el-select",
+          "description": "由已安装的 Element Plus / Quill 组件渲染。"
+        },
+        {
+          "name": "el-table",
+          "description": "由已安装的 Element Plus / Quill 组件渲染。"
+        },
+        {
+          "name": "el-table__cell",
+          "description": "由已安装的 Element Plus / Quill 组件渲染。"
+        },
+        {
+          "name": "el-table__empty-block",
+          "description": "由已安装的 Element Plus / Quill 组件渲染。"
+        },
+        {
+          "name": "el-tag",
+          "description": "由已安装的 Element Plus / Quill 组件渲染。"
+        },
+        {
+          "name": "el-upload",
+          "description": "由已安装的 Element Plus / Quill 组件渲染。"
+        },
+        {
+          "name": "ql-action",
+          "description": "由已安装的 Element Plus / Quill 组件渲染。"
+        },
+        {
+          "name": "ql-editing",
+          "description": "由已安装的 Element Plus / Quill 组件渲染。"
+        },
+        {
+          "name": "ql-font",
+          "description": "由已安装的 Element Plus / Quill 组件渲染。"
+        },
+        {
+          "name": "ql-header",
+          "description": "由已安装的 Element Plus / Quill 组件渲染。"
+        },
+        {
+          "name": "ql-picker",
+          "description": "由已安装的 Element Plus / Quill 组件渲染。"
+        },
+        {
+          "name": "ql-picker-item",
+          "description": "由已安装的 Element Plus / Quill 组件渲染。"
+        },
+        {
+          "name": "ql-picker-label",
+          "description": "由已安装的 Element Plus / Quill 组件渲染。"
+        },
+        {
+          "name": "ql-size",
+          "description": "由已安装的 Element Plus / Quill 组件渲染。"
+        },
+        {
+          "name": "ql-snow",
+          "description": "由已安装的 Element Plus / Quill 组件渲染。"
+        },
+        {
+          "name": "ql-toolbar",
+          "description": "由已安装的 Element Plus / Quill 组件渲染。"
+        },
+        {
+          "name": "ql-tooltip",
+          "description": "由已安装的 Element Plus / Quill 组件渲染。"
+        }
+      ]
+    }
+  }
+}
