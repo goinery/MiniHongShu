@@ -18,6 +18,9 @@
 # 用户上传内容和运行时数据。
 /HongShu-backend/upload/
 
+# 本地文档。
+/docs/
+
 # 编辑器、缓存和系统文件。
 **/.vscode/
 /.codex/
