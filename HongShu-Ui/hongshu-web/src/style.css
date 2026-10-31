@@ -1,0 +1,62 @@
+:root {
+  /* 默认主题色 */
+  --el-color-primary: #ff6699;
+  --el-color-primary-light-3: #ff94b8;
+  --el-color-primary-light-5: #ffb3cc;
+  --el-color-primary-light-7: #ffd1e0;
+  --el-color-primary-light-8: #ffe0eb;
+  --el-color-primary-light-9: #fff0f5;
+  --el-color-primary-dark-2: #cc527a;
+  --brand-color: #ff6699;
+  --brand-color-rgb: 255, 102, 153;
+  --brand-color-contrast: #111827;
+  --page-inline-padding: 24px;
+}
+
+* {
+    box-sizing: border-box;
+    -webkit-user-select: auto;
+    user-select: auto;
+    scrollbar-width: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+
+  button, input, optgroup, select, textarea {
+    font-family: inherit;
+    font-size: 100%;
+    line-height: 1.15;
+    margin: 0;
+}
+
+ul {
+    margin: 0;
+    padding: 0;
+}
+
+li{
+    list-style: none;
+}
+
+
+button, input {
+    overflow: visible;
+}
+
+button, input {
+    -webkit-appearance: none;
+    appearance: none;
+    outline: none;
+    border: none;
+    background: none;
+    padding: 0;
+}
+
+
+/* 自定义浅色主题色时，实心主按钮仍保持文字清晰。 */
+.el-button.el-button--primary:not(.is-plain):not(.is-text):not(.is-link) {
+  --el-button-text-color: var(--brand-color-contrast);
+  --el-button-hover-text-color: var(--brand-color-contrast);
+  --el-button-active-text-color: var(--brand-color-contrast);
+  --el-button-disabled-text-color: var(--brand-color-contrast);
+}
