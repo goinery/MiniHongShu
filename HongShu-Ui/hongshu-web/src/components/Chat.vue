@@ -1,4 +1,123 @@
-<template></template>
+<template>
+  <Teleport to="body">
+    <div class="chat-overlay" @click.self="close">
+      <section
+        ref="dialogRef"
+        class="chat-container"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="chat-dialog-title"
+        tabindex="-1"
+        @keydown.esc="close"
+      >
+        <header class="chat-header">
+          <div class="header-user">
+            <el-avatar :src="acceptUser.avatar" :size="40" />
+            <span id="chat-dialog-title" class="header-name">{{ acceptUser.username || "私信" }}</span>
+          </div>
+          <div class="header-tool">
+            <el-dropdown trigger="click" @command="clearHistory">
+              <button type="button" class="icon-button" aria-label="聊天选项">
+                <More class="icon-item" />
+              </button>
+              <template #dropdown>
+                <el-dropdown-menu><el-dropdown-item command="clear">清空我的聊天记录</el-dropdown-item></el-dropdown-menu>
+              </template>
+            </el-dropdown>
+            <button type="button" class="icon-button chat-close" aria-label="关闭私聊窗口" :disabled="sending" @click="close">
+              <Close class="icon-item" />
+            </button>
+          </div>
+        </header>
+        <main class="chat-main">
+          <div class="chat-record" ref="ChatRef" @scroll="showScroll()">
+            <div v-if="!loading && !dataList.length" class="chat-empty">暂无聊天记录</div>
+            <div v-for="(item, index) in dataList" :key="index">
+              <div class="message-my-item" v-if="item.acceptUid === acceptUser.id">
+                <el-button v-if="item.isFailed" link type="danger" @click="sendMessage(item, true)">发送失败，重试</el-button>
+                <Loading v-show="item.isLoading" style="width: 0.8em; height: 0.8em" />
+                <div class="message-my-conent" v-if="item.msgType == 1">{{ item.content }}</div>
+                <img alt="消息图片" :src="item.content" class="message-img" v-if="item.msgType == 2" />
+                <div class="user-avatar"><el-avatar :src="currentUser.avatar" /></div>
+              </div>
+              <div class="message-item" v-else>
+                <div class="user-avatar"><el-avatar :src="acceptUser.avatar" /></div>
+                <div class="message-conent" v-if="item.msgType == 1">{{ item.content }}</div>
+                <img alt="消息图片" :src="item.content" class="message-img" v-if="item.msgType == 2" />
+              </div>
+            </div>
+          </div>
+          <div class="chat-input">
+            <div class="input-tool">
+              <div class="tool-left">
+                <el-popover v-model:visible="emojiPickerVisible" trigger="click" placement="top-start" :width="280" :teleported="false">
+                  <template #reference>
+                    <button type="button" class="icon-button emoji-trigger" aria-label="选择表情" title="选择表情" :disabled="sending" @mousedown.prevent="rememberEditorSelection">
+                      <svg class="icon-item" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                        <circle cx="12" cy="12" r="9" />
+                        <path d="M8 14a4.5 4.5 0 0 0 8 0" stroke-linecap="round" />
+                        <circle cx="8.5" cy="9" r=".75" fill="currentColor" stroke="none" />
+                        <circle cx="15.5" cy="9" r=".75" fill="currentColor" stroke="none" />
+                      </svg>
+                    </button>
+                  </template>
+                  <div class="emoji-grid" role="group" aria-label="常用表情">
+                    <button v-for="emoji in emojis" :key="emoji" type="button" class="emoji-option" :aria-label="emoji" :disabled="sending" @mousedown.prevent @click="insertEmoji(emoji)">{{ emoji }}</button>
+                  </div>
+                </el-popover>
+                <el-upload ref="imageUpload" multiple :auto-upload="false" :show-file-list="false" :on-change="handleChange" accept="image/jpeg,image/png,image/webp,image/gif,image/bmp" :disabled="sending || imageLimitReached">
+                  <button type="button" class="icon-button" aria-label="选择图片预览" :title="imageLimitReached ? `最多添加 ${MAX_IMAGE_COUNT} 张图片，删除后可继续添加` : `选择图片，最多 ${MAX_IMAGE_COUNT} 张`" :disabled="sending || imageLimitReached">
+                    <Picture class="icon-item" />
+                  </button>
+                </el-upload>
+              </div>
+              <button type="button" class="icon-button history-button" aria-label="加载更早的聊天记录" title="加载更早的聊天记录" :disabled="loading" @click="loadEarlierMessages">
+                <Loading v-if="loading" class="icon-item is-loading" />
+                <Clock v-else class="icon-item" />
+                <span>{{ loading ? "加载中…" : "聊天记录" }}</span>
+              </button>
+            </div>
+            <div class="input-content">
+              <div v-if="imagePreviews.length" class="draft-images" aria-label="待发送的图片">
+                <div v-for="image in imagePreviews" :key="image.id" class="draft-image">
+                  <img :src="image.preview" :alt="image.name" />
+                  <button type="button" class="remove-image" :aria-label="`移除图片 ${image.name}`" :disabled="sending" @click="removeImage(image.id)">
+                    <Close />
+                  </button>
+                </div>
+              </div>
+              <textarea
+                id="post-textarea"
+                ref="postContent"
+                class="post-content"
+                aria-label="消息内容"
+                aria-describedby="chat-draft-count"
+                v-model="draftText"
+                :maxlength="MAX_MESSAGE_LENGTH"
+                :readonly="sending"
+                placeholder="请输入消息，支持发送图片哦～"
+                @keydown="handleEditorKeydown"
+                @input="handleDraftInput"
+                @compositionstart="composing = true"
+                @compositionend="handleCompositionEnd"
+                @keyup="rememberEditorSelection"
+                @mouseup="rememberEditorSelection"
+                @select="rememberEditorSelection"
+              ></textarea>
+              <div class="input-btn">
+                <div class="input-counts">
+                  <span id="chat-draft-count" class="input-count" :class="{ 'is-limit': draftText.length >= MAX_MESSAGE_LENGTH }" :title="draftText.length >= MAX_MESSAGE_LENGTH ? '已达到字数上限，可删除或选中文字替换' : '消息字数上限'">{{ draftText.length }}/{{ MAX_MESSAGE_LENGTH }}</span>
+                  <span v-if="pendingImages.size" class="input-count" :class="{ 'is-limit': imageLimitReached }" :title="imageLimitReached ? '已达到图片数量上限，删除后可继续添加' : `每次最多发送 ${MAX_IMAGE_COUNT} 张图片`" role="status">图片 {{ pendingImages.size }}/{{ MAX_IMAGE_COUNT }}</span>
+                </div>
+                <el-button type="primary" round class="send-button" :loading="sending" :disabled="composing || (!draftText.trim() && !pendingImages.size)" @click="submit">发送</el-button>
+              </div>
+            </div>
+          </div>
+        </main>
+      </section>
+    </div>
+  </Teleport>
+</template>
 <script lang="ts" setup>
 import { More, Picture, Clock, Close, Loading } from "@element-plus/icons-vue";
 import { computed, reactive, ref, onMounted, onBeforeUnmount, watch, nextTick } from "vue";
