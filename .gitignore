@@ -18,8 +18,9 @@
 # 用户上传内容和运行时数据。
 /HongShu-backend/upload/
 
-# 本地文档。
+# 文档和部署文件由各目录的独立本地 Git 仓库管理。
 /docs/
+/deploy/
 
 # 编辑器、缓存和系统文件。
 **/.vscode/
