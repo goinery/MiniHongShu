@@ -216,9 +216,122 @@
                   </el-form-item>
                </el-col>
             </el-row>
+            <el-row>
+               <el-col :span="12">
+                  <el-form-item v-if="(form.userId === undefined || form.userId === null)" label="用户名称" prop="userName">
+                     <el-input v-model="form.userName" placeholder="请输入用户名称" maxlength="30" />
+                  </el-form-item>
+               </el-col>
+               <el-col :span="12">
+                  <el-form-item v-if="(form.userId === undefined || form.userId === null)" label="用户密码" prop="password">
+                     <el-input v-model="form.password" placeholder="请输入用户密码" type="password" maxlength="20" show-password />
+                  </el-form-item>
+               </el-col>
+            </el-row>
+            <el-row>
+               <el-col :span="12">
+                  <el-form-item label="用户性别">
+                     <el-select v-model="form.sex" placeholder="请选择">
+                        <el-option
+                           v-for="dict in sys_user_sex"
+                           :key="dict.value"
+                           :label="dict.label"
+                           :value="dict.value"
+                        ></el-option>
+                     </el-select>
+                  </el-form-item>
+               </el-col>
+               <el-col :span="12">
+                  <el-form-item label="状态">
+                     <el-radio-group v-model="form.status">
+                        <el-radio
+                           v-for="dict in sys_normal_disable"
+                           :key="dict.value"
+                           :label="dict.value"
+                        >{{ dict.label }}</el-radio>
+                     </el-radio-group>
+                  </el-form-item>
+               </el-col>
+            </el-row>
+            <el-row>
+               <el-col :span="12">
+                  <el-form-item label="岗位">
+                     <el-select v-model="form.postIds" multiple placeholder="请选择">
+                        <el-option
+                           v-for="item in postOptions"
+                           :key="item.postId"
+                           :label="item.postName"
+                           :value="item.postId"
+                           :disabled="Number(item.status ?? NaN) === 1"
+                        ></el-option>
+                     </el-select>
+                  </el-form-item>
+               </el-col>
+               <el-col :span="12">
+                  <el-form-item label="角色">
+                     <el-select v-model="form.roleIds" multiple placeholder="请选择">
+                        <el-option
+                           v-for="item in roleOptions"
+                           :key="item.roleId"
+                           :label="item.roleName"
+                           :value="item.roleId"
+                           :disabled="Number(item.status ?? NaN) === 1"
+                        ></el-option>
+                     </el-select>
+                  </el-form-item>
+               </el-col>
+            </el-row>
+            <el-row>
+               <el-col :span="24">
+                  <el-form-item label="备注">
+                     <el-input v-model="form.remark" type="textarea" placeholder="请输入内容"></el-input>
+                  </el-form-item>
+               </el-col>
+            </el-row>
          </el-form>
+         <template #footer>
+            <div class="dialog-footer">
+               <el-button type="primary" @click="submitForm">确 定</el-button>
+               <el-button @click="cancel">取 消</el-button>
+            </div>
+         </template>
       </el-dialog>
-   </div></template>
+
+      <!-- 用户导入对话框 -->
+      <el-dialog :title="upload.title" v-model="upload.open" width="400px" append-to-body>
+         <el-upload
+            ref="uploadRef"
+            :limit="1"
+            accept=".xlsx, .xls"
+            :headers="upload.headers"
+            :action="upload.url + '?updateSupport=' + upload.updateSupport"
+            :disabled="upload.isUploading"
+            :on-progress="handleFileUploadProgress"
+            :on-success="handleFileSuccess"
+            :auto-upload="false"
+            drag
+         >
+            <el-icon class="el-icon--upload"><upload-filled /></el-icon>
+            <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+            <template #tip>
+               <div class="el-upload__tip text-center">
+                  <div class="el-upload__tip">
+                     <el-checkbox v-model="upload.updateSupport" />是否更新已经存在的用户数据
+                  </div>
+                  <span>仅允许导入xls、xlsx格式文件。</span>
+                  <el-link type="primary" :underline="false" style="font-size:12px;vertical-align: baseline;" @click="importTemplate">下载模板</el-link>
+               </div>
+            </template>
+         </el-upload>
+         <template #footer>
+            <div class="dialog-footer">
+               <el-button type="primary" @click="submitFileForm">确 定</el-button>
+               <el-button @click="upload.open = false">取 消</el-button>
+            </div>
+         </template>
+      </el-dialog>
+   </div>
+</template>
 
 <script setup>
 import { UploadFilled } from '@element-plus/icons-vue'
@@ -496,4 +609,11 @@ getDeptTree();
 getList();
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+.user-departments { margin-bottom: 20px; }
+.user-departments-title { margin: 0 0 16px; padding: 0 0 12px; border-bottom: 1px solid var(--cf-border); color: var(--cf-text); font-size: 14px; font-weight: 600; }
+.user-departments :deep(.el-input) { margin-bottom: 12px !important; }
+.user-departments :deep(.el-tree) { background: transparent; color: var(--cf-muted); font-size: 13px; }
+.user-departments :deep(.el-tree-node__content) { min-height: 34px; border-radius: 5px; }
+.user-departments :deep(.el-tree-node.is-current > .el-tree-node__content) { background: var(--el-color-primary-light-9); color: var(--el-color-primary); }
+</style>
