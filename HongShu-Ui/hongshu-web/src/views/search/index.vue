@@ -619,7 +619,127 @@ initData();
       width: 2.5rem;
       height: 2.5rem;
       background: #fff;
-}
-}
+      border: 0.0625rem solid rgba(0, 0, 0, 0.08);
+      box-shadow:
+        0 0.125rem 0.5rem 0 rgba(0, 0, 0, 0.1),
+        0 0.0625rem 0.125rem 0 rgba(0, 0, 0, 0.02);
+      border-radius: 6.25rem;
+      color: rgba(51, 51, 51, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      //transition: background 0.2s;
+      cursor: pointer;
+    }
+  }
+
+  .agree-container {
+    .agree-item {
+      display: flex;
+      flex-direction: row;
+      padding-top: 1.5rem;
+
+      .user-avatar {
+        margin-right: 1.5rem;
+        flex-shrink: 0;
+
+        .avatar-item {
+          width: 3rem;
+          height: 3rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          border-radius: 100%;
+          border: 0.0625rem solid rgba(0, 0, 0, 0.08);
+          object-fit: cover;
+        }
+      }
+
+      .main {
+        flex-grow: 1;
+        flex-shrink: 1;
+        display: flex;
+        flex-direction: row;
+        padding-bottom: 0.75rem;
+        border-bottom: 0.0625rem solid rgba(0, 0, 0, 0.08);
+
+        .info {
+          flex-grow: 1;
+          flex-shrink: 1;
+
+          .user-info {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.25rem;
+
+            a {
+              color: #333;
+              font-size: 1rem;
+              font-weight: 600;
+            }
+          }
+
+          .interaction-hint {
+            font-size: 0.875rem;
+            color: rgba(51, 51, 51, 0.6);
+            margin-bottom: 0.5rem;
+          }
+
+          .interaction-content {
+            display: flex;
+            font-size: 0.875rem;
+            color: #333;
+            line-height: 140%;
+            cursor: pointer;
+            margin-bottom: 0.75rem;
+
+            .msg-count {
+              width: 1.25rem;
+              height: 1.25rem;
+              line-height: 1.25rem;
+              font-size: 0.8125rem;
+              color: #fff;
+              background-color: var(--el-color-primary);
+              text-align: center;
+              border-radius: 100%;
+            }
+          }
+
+          .quote-info {
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            color: rgba(51, 51, 51, 0.6);
+            margin-bottom: 0.75rem;
+            cursor: pointer;
+          }
+
+          .quote-info::before {
+            content: "";
+            display: inline-block;
+            border-radius: 0.5rem;
+            margin-right: 0.375rem;
+            width: 0.25rem;
+            height: 1.0625rem;
+            background: rgba(0, 0, 0, 0.08);
+          }
+        }
+
+        .extra {
+          min-width: 3rem;
+          flex-shrink: 0;
+          margin-left: 1.5rem;
+
+          .follow-button {
+            width: 6rem;
+          }
+
+        }
+      }
+    }
+  }
 }
 </style>
