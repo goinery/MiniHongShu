@@ -1,0 +1,206 @@
+package com.hongshu.web.service.impl;
+
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.hongshu.common.core.domain.Query;
+import com.hongshu.common.utils.ConvertUtils;
+import com.hongshu.common.validator.ValidatorUtil;
+import com.hongshu.web.domain.entity.WebComment;
+import com.hongshu.web.domain.entity.WebNote;
+import com.hongshu.web.domain.entity.WebUser;
+import com.hongshu.web.domain.vo.CommentVO;
+import com.hongshu.web.mapper.SysCommentMapper;
+import com.hongshu.web.mapper.WebNoteMapper;
+import com.hongshu.web.mapper.WebUserMapper;
+import com.hongshu.web.service.CommentDeletionService;
+import com.hongshu.web.service.ISysCommentService;
+import org.springframework.stereotype.Service;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+/**
+ * 评论信息 服务层处理
+ *
+ * @author hongshu
+ */
+@Service
+public class SysCommentServiceImpl implements ISysCommentService {
+
+    private final SysCommentMapper commentMapper;
+    private final WebUserMapper userMapper;
+    private final WebNoteMapper noteMapper;
+    private final CommentDeletionService deletion;
+
+    public SysCommentServiceImpl(SysCommentMapper commentMapper, WebUserMapper userMapper,
+                                 WebNoteMapper noteMapper, CommentDeletionService deletion) {
+        this.commentMapper = commentMapper;
+        this.userMapper = userMapper;
+        this.noteMapper = noteMapper;
+        this.deletion = deletion;
+    }
+
+
+    /**
+     * 获取所有一级分类列表
+     *
+     * @param query 评论信息
+     */
+    @Override
+    public List<CommentVO> selectCommentList(Query query) {
+        QueryWrapper<WebComment> qw = new QueryWrapper<>();
+        qw.lambda()
+                .eq(ValidatorUtil.isNotNull(query.getUid()), WebComment::getUid, query.getUid())
+                .eq(ValidatorUtil.isNotNull(query.get("nid")), WebComment::getNid, query.get("nid"))
+                .like(ValidatorUtil.isNotNull(query.get("content")), WebComment::getContent, query.get("content"))
+                .eq(ValidatorUtil.isNull(query.get("nid")), WebComment::getLevel, 1)
+                .ge(ValidatorUtil.isNotNull(query.get("params[beginTime]")), WebComment::getCreateTime, query.get("params[beginTime]"))
+                .le(ValidatorUtil.isNotNull(query.get("params[endTime]")), WebComment::getCreateTime, query.get("params[endTime]"))
+                .orderByDesc(WebComment::getCreateTime);
+        // 查询评论列表
+        List<WebComment> commentList = commentMapper.selectList(qw);
+        // 转换为 VO
+        List<CommentVO> commentVOList = ConvertUtils.sourceToTarget(commentList, CommentVO.class);
+        if (commentVOList.isEmpty()) {
+            return commentVOList;
+        }
+        // 批量查询用户和笔记信息
+        Set<String> userIds = commentVOList.stream()
+                .flatMap(commentVo -> Stream.of(commentVo.getUid(), commentVo.getNoteUid(), commentVo.getReplyUid()))
+                .collect(Collectors.toSet());
+        Map<String, WebUser> userMap = userMapper.selectByIds(userIds).stream()
+                .collect(Collectors.toMap(WebUser::getId, Function.identity()));
+        Set<String> noteIds = commentVOList.stream()
+                .map(CommentVO::getNid)
+                .collect(Collectors.toSet());
+        Map<String, WebNote> noteMap = noteMapper.selectByIds(noteIds).stream()
+                .collect(Collectors.toMap(WebNote::getId, Function.identity()));
+        // 设置关联数据
+        for (CommentVO commentVo : commentVOList) {
+            WebUser webUser = userMap.get(commentVo.getUid());
+            if (webUser != null) {
+                commentVo.setUsername(webUser.getUsername());
+                commentVo.setAvatar(webUser.getAvatar());
+            }
+            WebUser replyUser = userMap.get(commentVo.getReplyUid());
+            if (replyUser != null) {
+                commentVo.setReplyUsername(replyUser.getUsername());
+                commentVo.setReplyAvatar(replyUser.getAvatar());
+            }
+            WebUser pushUser = userMap.get(commentVo.getNoteUid());
+            if (pushUser != null) {
+                commentVo.setPushUsername(pushUser.getUsername());
+            }
+            WebNote note = noteMap.get(commentVo.getNid());
+            if (note != null) {
+                commentVo.setTitle(note.getTitle());
+                commentVo.setNoteCover(note.getNoteCover());
+            }
+        }
+        return commentVOList;
+    }
+
+
+    /**
+     * 查询一级以下评论
+     *
+     * @param query 评论信息
+     */
+    @Override
+    public List<CommentVO> selectTreeList(Query query) {
+        QueryWrapper<WebComment> qw = new QueryWrapper<>();
+        qw.lambda()
+                .eq(ValidatorUtil.isNotNull(query.getUid()), WebComment::getUid, query.getUid())
+//                .like(ValidatorUtil.isNotNull(query.getNoteUid()), WebComment::getNoteUid, query.getNoteUid())
+//                .like(ValidatorUtil.isNotNull(query.getContent()), WebComment::getContent, query.getContent())
+                .eq(ValidatorUtil.isNotNull(query.get("nid")), WebComment::getNid, query.get("nid"))
+                .ge(ValidatorUtil.isNotNull(query.get("params[beginTime]")), WebComment::getCreateTime, query.get("params[beginTime]"))
+                .le(ValidatorUtil.isNotNull(query.get("params[endTime]")), WebComment::getCreateTime, query.get("params[endTime]"))
+                .orderByDesc(WebComment::getCreateTime);
+        // 查询评论列表
+        List<WebComment> commentList = commentMapper.selectList(qw);
+        // 转换为 VO
+        List<CommentVO> commentVOList = ConvertUtils.sourceToTarget(commentList, CommentVO.class);
+        if (commentVOList.isEmpty()) {
+            return commentVOList;
+        }
+        // 批量查询用户和笔记信息
+        Set<String> userIds = commentVOList.stream()
+                .flatMap(commentVo -> Stream.of(commentVo.getUid(), commentVo.getNoteUid()))
+                .collect(Collectors.toSet());
+        Map<String, WebUser> userMap = userMapper.selectByIds(userIds).stream()
+                .collect(Collectors.toMap(WebUser::getId, Function.identity()));
+        Set<String> noteIds = commentVOList.stream()
+                .map(CommentVO::getNid)
+                .collect(Collectors.toSet());
+        Map<String, WebNote> noteMap = noteMapper.selectByIds(noteIds).stream()
+                .collect(Collectors.toMap(WebNote::getId, Function.identity()));
+        // 设置关联数据
+        for (CommentVO commentVo : commentVOList) {
+            WebUser webUser = userMap.get(commentVo.getUid());
+            if (webUser != null) {
+                commentVo.setUsername(webUser.getUsername());
+                commentVo.setAvatar(webUser.getAvatar());
+            }
+            WebUser pushUser = userMap.get(commentVo.getNoteUid());
+            if (pushUser != null) {
+                commentVo.setPushUsername(pushUser.getUsername());
+            }
+            WebNote note = noteMap.get(commentVo.getNid());
+            if (note != null) {
+                commentVo.setTitle(note.getTitle());
+                commentVo.setNoteCover(note.getNoteCover());
+            }
+        }
+        return commentVOList;
+    }
+
+    /**
+     * 通过评论ID查询评论信息
+     *
+     * @param id 评论ID
+     */
+    @Override
+    public WebComment selectCommentById(Long id) {
+        return commentMapper.selectById(id);
+    }
+
+    /**
+     * 通过笔记ID查询评论信息
+     *
+     * @param nid 笔记ID
+     */
+    @Override
+    public List<WebComment> selectCommentByNid(String nid) {
+        QueryWrapper<WebComment> qw = new QueryWrapper<>();
+        qw.lambda().eq(ValidatorUtil.isNotNull(nid), WebComment::getNid, nid);
+        return commentMapper.selectList(qw);
+    }
+
+    /**
+     * 批量删除评论信息
+     *
+     * @param ids 需要删除的评论ID
+     */
+    @Override
+    public int deleteCommentByIds(Long[] ids) {
+        if (ids == null || ids.length == 0) {
+            return 0;
+        }
+        List<String> commentIds = Arrays.stream(ids).filter(Objects::nonNull)
+                .map(String::valueOf).collect(Collectors.toList());
+        return deletion.deleteComments(commentIds);
+    }
+
+    @Override
+    public Integer getCommentCount(int status) {
+        QueryWrapper<WebComment> queryWrapper = new QueryWrapper<>();
+//        queryWrapper.eq(BaseSQLConf.STATUS, status);
+        return Math.toIntExact(commentMapper.selectCount(queryWrapper));
+    }
+}
