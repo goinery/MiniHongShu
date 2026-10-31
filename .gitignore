@@ -1,0 +1,30 @@
+**/node_modules/
+**/target/
+**/dist/
+**/unpackage/
+**/.idea/
+**/logs/
+*.log
+
+# 本地运行配置；新环境从对应的 *.example.yml 复制。
+/.env
+/HongShu-backend/hongshu-server/src/main/resources/application.yml
+/HongShu-backend/hongshu-server/src/main/resources/application-druid.yml
+**/application-local.yml
+**/application-local.yaml
+**/.env.local
+**/.env.*.local
+
+# 用户上传内容和运行时数据。
+/HongShu-backend/upload/
+
+# 编辑器、缓存和系统文件。
+**/.vscode/
+/.codex/
+**/.hbuilderx/
+**/.cache/
+**/coverage/
+*.tsbuildinfo
+.DS_Store
+Thumbs.db
+desktop.ini
