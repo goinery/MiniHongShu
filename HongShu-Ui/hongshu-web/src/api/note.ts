@@ -1,0 +1,77 @@
+import request from "@/utils/request";
+
+export const uploadNoteImage = async (file: File): Promise<string> => {
+  const data = new FormData();
+  data.append("uploadFiles", file);
+  const result = await request<any>({ url: "/web/oss/saveBatch", method: "post", data });
+  return result.data?.[0];
+};
+
+/**
+ * 根据笔记id获取笔记
+ * @param noteId 笔记id
+ * @returns 笔记
+ */
+export const getNoteById = (noteId: string) => {
+  return request<any>({
+    url: "/web/note/getNoteById", // mock接口
+    method: "get",
+    params: {
+      noteId,
+    },
+  });
+};
+
+/**
+ * 保存笔记
+ * @param data 笔记实体
+ * @returns 笔记id
+ */
+export const saveNoteByDTO = (data: any) => {
+  return request<any>({
+    url: "/web/note/saveNoteByDTO",
+    method: "post",
+    data: data,
+  });
+};
+
+/**
+ * 更新笔记
+ * @param data 笔记实体
+ * @returns 笔记id
+ */
+export const updateNoteByDTO = (data: any) => {
+  return request<any>({
+    url: "/web/note/updateNoteByDTO",
+    method: "post",
+    data: data,
+  });
+};
+
+/**
+ * 置顶笔记
+ * @param noteId 
+ * @returns 
+ */
+export const pinnedNote = (noteId: string) => {
+  return request<any>({
+    url: "/web/note/pinnedNote", // mock接口
+    method: "get",
+    params: {
+      noteId,
+    },
+  });
+};
+
+/**
+ * 删除笔记
+ * @param data 
+ * @returns 
+ */
+export const deleteNoteByIds = (data: any) => {
+  return request<any>({
+    url: "/web/note/deleteNoteByIds", // mock接口
+    method: "post",
+    data: data,
+  });
+};
