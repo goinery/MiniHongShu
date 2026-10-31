@@ -473,4 +473,35 @@ function handleExport() {
 getList();
 </script>
 
-<style scoped></style>
+<style scoped>
+/* 组件库内部类由子组件在运行时生成。 */
+/*noinspection CssUnusedSymbol*/
+.image-uploader .el-upload {
+  border: 1px dashed var(--cf-border);
+  border-radius: 6px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+/*noinspection CssUnusedSymbol*/
+.image-uploader .el-upload:hover {
+  border-color: var(--el-color-primary);
+}
+
+.image-uploader-icon {
+  font-size: 28px;
+  color: var(--cf-muted);
+  width: 100%;
+  height: 100%;
+  line-height: 145px;
+  margin-left: 1px;
+  text-align: center;
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+</style>
