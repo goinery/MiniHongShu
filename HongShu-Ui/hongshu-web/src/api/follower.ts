@@ -1,4 +1,6 @@
-import request from "@/utils/request";
+import { createApi } from "@/utils/request";
+
+const request = createApi("/web/follower");
 
 export type RelationType = "following" | "fans";
 
@@ -13,7 +15,7 @@ export interface RelationUser {
 
 export const getUserRelations = (userId: string, type: RelationType, currentPage: number, pageSize: number) => {
   return request<any>({
-    url: `/web/follower/getUserRelations/${currentPage}/${pageSize}`,
+    url: `/getUserRelations/${currentPage}/${pageSize}`,
     method: "get",
     params: { userId, type },
   });
@@ -27,7 +29,7 @@ export const getUserRelations = (userId: string, type: RelationType, currentPage
  */
 export const getFollowTrend = (currentPage: number, pageSize: number) => {
   return request<any>({
-    url: `/web/follower/getFollowTrend/${currentPage}/${pageSize}`, // mock接口
+    url: `/getFollowTrend/${currentPage}/${pageSize}`, // mock接口
     method: "get",
   });
 };
@@ -39,7 +41,7 @@ export const getFollowTrend = (currentPage: number, pageSize: number) => {
  */
 export const followById = (followerId: string) => {
   return request<any>({
-    url: `/web/follower/followById`, // mock接口
+    url: "/followById", // mock接口
     method: "get",
     params: {
       followerId,
@@ -54,7 +56,7 @@ export const followById = (followerId: string) => {
  */
 export const isFollow = (followerId: string) => {
   return request<any>({
-    url: `/web/follower/isFollow`, // mock接口
+    url: "/isFollow", // mock接口
     method: "get",
     params: {
       followerId,
@@ -70,7 +72,7 @@ export const isFollow = (followerId: string) => {
  */
 export const getNoticeFollower = (currentPage: number, pageSize: number) => {
   return request<any>({
-    url: `/web/follower/getNoticeFollower/${currentPage}/${pageSize}`, // mock接口
+    url: `/getNoticeFollower/${currentPage}/${pageSize}`, // mock接口
     method: "get",
   });
 };

@@ -71,7 +71,7 @@
 import { Delete } from "@element-plus/icons-vue";
 import { ref, onMounted, watch } from "vue";
 import { useSearchStore } from "@/store/searchStore";
-import { getHotRecord, addRecord } from "@/api/search";
+import { getHotRecord, addRecord } from "@/api/searchRecord";
 import { getRandomString } from "@/utils/util";
 import { storage } from "@/utils/storage";
 import { useRouter } from "vue-router";

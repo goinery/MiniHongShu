@@ -169,7 +169,7 @@
 import { Waterfall } from "vue-waterfall-plugin-next";
 import "vue-waterfall-plugin-next/dist/style.css";
 import { ref, watch } from "vue";
-import { getNoteByDTO, getCategoryAgg } from "@/api/search";
+import { getNoteByDTO, getCategoryAgg } from "@/api/searchNote";
 import type { NoteDTO, NoteSearch } from "@/type/note";
 import type { Category } from "@/type/category";
 import Main from "@/views/main/main.vue";

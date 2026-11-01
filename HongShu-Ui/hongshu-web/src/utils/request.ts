@@ -1,4 +1,4 @@
-import axios, { type InternalAxiosRequestConfig } from "axios";
+import axios, { type AxiosRequestConfig, type InternalAxiosRequestConfig } from "axios";
 import { useUserStore } from "@/store/userStore";
 import { ElMessage } from "element-plus";
 
@@ -66,5 +66,17 @@ service.interceptors.response.use(async (response) => {
   else ElMessage.error(error.response?.data?.message || error.response?.data?.msg || "请求失败，请检查网络后重试");
   return Promise.reject(error);
 });
+
+// 模块只需绑定一次前缀；请求和刷新重试共用同一个实例。
+export function createApi(prefix: string) {
+  const basePath = prefix.replace(/\/+$/, "");
+  return <T = any>(config: AxiosRequestConfig) => {
+    const path = config.url?.replace(/^\/+/, "");
+    return service<T>({
+      ...config,
+      url: path ? `${basePath}/${path}` : basePath,
+    });
+  };
+}
 
 export default service;

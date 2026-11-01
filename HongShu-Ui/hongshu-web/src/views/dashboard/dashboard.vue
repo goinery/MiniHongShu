@@ -120,7 +120,8 @@
 import { Waterfall } from "vue-waterfall-plugin-next";
 import "vue-waterfall-plugin-next/dist/style.css";
 import { nextTick, onBeforeUnmount, ref, watch } from "vue";
-import { getRecommendNote, getNoteByDTO, addRecord } from "@/api/search";
+import { getRecommendNote, getNoteByDTO } from "@/api/searchNote";
+import { addRecord } from "@/api/searchRecord";
 import { getCategoryTreeData } from "@/api/category";
 import type { NoteDTO, NoteSearch } from "@/type/note";
 import type { Category } from "@/type/category";

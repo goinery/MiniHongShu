@@ -19,7 +19,7 @@ import { ref, watchEffect } from "vue";
 import { getRandomString } from "@/utils/util";
 import { useSearchStore } from "@/store/searchStore";
 import { useRouter } from "vue-router";
-import { addRecord } from "@/api/search";
+import { addRecord } from "@/api/searchRecord";
 
 const router = useRouter();
 

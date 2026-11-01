@@ -1,4 +1,6 @@
-import request from "@/utils/request";
+import { createApi } from "@/utils/request";
+
+const request = createApi("/web/im/chat");
 
 /**
  * 得到所有聊天的记录数量
@@ -6,7 +8,7 @@ import request from "@/utils/request";
  */
 export const getCountMessage = () => {
   return request<any>({
-    url: "/web/im/chat/getCountMessage", // mock接口
+    url: "/getCountMessage", // mock接口
     method: "get",
   });
 };
@@ -17,7 +19,7 @@ export const getCountMessage = () => {
  */
 export const getChatUserList = () => {
   return request<any>({
-    url: "/web/im/chat/getChatUserList", // mock接口
+    url: "/getChatUserList", // mock接口
     method: "get",
   });
 };
@@ -30,7 +32,7 @@ export const getChatUserList = () => {
  */
 export const clearMessageCount = (sendUid:string,type:number) => {
   return request<any>({
-    url: "/web/im/chat/clearMessageCount", // mock接口
+    url: "/clearMessageCount", // mock接口
     method: "get",
     params:{
       sendUid,
@@ -52,7 +54,7 @@ export const getAllChatRecord = (
   acceptUid: string
 ) => {
   return request<any>({
-    url: `/web/im/chat/getAllChatRecord/${currentPage}/${pageSize}`, // mock接口
+    url: `/getAllChatRecord/${currentPage}/${pageSize}`, // mock接口
     method: "get",
     params: {
       acceptUid,
@@ -67,12 +69,12 @@ export const getAllChatRecord = (
  */
 export const sendMsg = (data: any) => {
   return request<any>({
-    url: "/web/im/chat/sendMsg", // mock接口
+    url: "/sendMsg", // mock接口
     method: "post",
     data: data,
   });
 };
 
 export const deleteAllChatRecord = (acceptUid: string) => request<any>({
-  url: "/web/im/chat/deleteAllChatRecord", method: "get", params: { acceptUid },
+  url: "/deleteAllChatRecord", method: "get", params: { acceptUid },
 });

@@ -67,7 +67,7 @@
 <script lang="ts" setup>
 import { Close } from "@element-plus/icons-vue";
 import type { UserLogin } from "@/type/user";
-import { login } from "@/api/user";
+import { login } from "@/api/auth";
 import { ref } from "vue";
 import { useUserStore } from "@/store/userStore";
 import { useRouter } from "vue-router";

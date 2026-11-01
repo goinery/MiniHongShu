@@ -1,5 +1,8 @@
-import request from "@/utils/request";
+import { createApi } from "@/utils/request";
 import type { LikeOrCollectionDTO } from "@/type/likeOrCollection";
+
+const request = createApi("/web/likeOrCollection");
+
 /**
  * 点赞或收藏
  * @param data 点赞收藏实体
@@ -7,7 +10,7 @@ import type { LikeOrCollectionDTO } from "@/type/likeOrCollection";
  */
 export const likeOrCollectionByDTO = (data: LikeOrCollectionDTO) => {
   return request<any>({
-    url: `/web/likeOrCollection/likeOrCollectionByDTO`, // mock接口
+    url: "/likeOrCollectionByDTO", // mock接口
     method: "post",
     data: data,
   });
@@ -20,7 +23,7 @@ export const likeOrCollectionByDTO = (data: LikeOrCollectionDTO) => {
  */
 export const isLikeOrCollection = (data: LikeOrCollectionDTO) => {
   return request<any>({
-    url: `/web/likeOrCollection/isLikeOrCollection`, // mock接口
+    url: "/isLikeOrCollection", // mock接口
     method: "post",
     data: data,
   });
@@ -34,7 +37,7 @@ export const isLikeOrCollection = (data: LikeOrCollectionDTO) => {
  */
 export const getNoticeLikeOrCollection = (currentPage: number, pageSize: number) => {
   return request<any>({
-    url: `/web/likeOrCollection/getNoticeLikeOrCollection/${currentPage}/${pageSize}`, // mock接口
+    url: `/getNoticeLikeOrCollection/${currentPage}/${pageSize}`, // mock接口
     method: "get",
   });
 };

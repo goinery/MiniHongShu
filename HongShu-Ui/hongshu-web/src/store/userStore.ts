@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { storage } from "@/utils/storage";
-import { getUserInfoByToken, refreshToken } from "@/api/user";
+import { getUserInfoByToken, refreshToken } from "@/api/auth";
 import { store } from "@/store";
 import type { User } from "@/type/user";
 

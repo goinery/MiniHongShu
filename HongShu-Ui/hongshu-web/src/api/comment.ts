@@ -1,5 +1,7 @@
-import request from "@/utils/request";
+import { createApi } from "@/utils/request";
 import type { CommentDTO } from "@/type/comment";
+
+const request = createApi("/web/comment");
 
 /**
  * 得到所有的一级评论并携带二级评论
@@ -14,7 +16,7 @@ export const getCommentWithCommentByNoteId = (
   noteId: string
 ) => {
   return request<any>({
-    url: `/web/comment/getCommentWithCommentByNoteId/${currentPage}/${pageSize}`,
+    url: `/getCommentWithCommentByNoteId/${currentPage}/${pageSize}`,
     method: "get",
     params: {
       noteId,
@@ -29,7 +31,7 @@ export const getCommentWithCommentByNoteId = (
  */
 export const saveCommentByDTO = (data: CommentDTO) => {
   return request<any>({
-    url: `/web/comment/saveCommentByDTO`, 
+    url: "/saveCommentByDTO", 
     method: "post",
     data: data,
   });
@@ -42,7 +44,7 @@ export const saveCommentByDTO = (data: CommentDTO) => {
  */
 export const syncCommentByIds = (data: Array<string>) => {
   return request<any>({
-    url: `/web/comment/syncCommentByIds`,
+    url: "/syncCommentByIds",
     method: "post",
     data: data,
   });
@@ -61,7 +63,7 @@ export const getTwoCommentPageByOneCommentId = (
   oneCommentId: string
 ) => {
   return request<any>({
-    url: `/web/comment/getTwoCommentByOneCommentId/${currentPage}/${pageSize}`,
+    url: `/getTwoCommentByOneCommentId/${currentPage}/${pageSize}`,
     method: "get",
     params: {
       oneCommentId,
@@ -74,7 +76,7 @@ export const getTwoCommentPageByOneCommentId = (
  */
 export const deleteCommentById = (commentId: string) => {
   return request<any>({
-    url: `/web/comment/deleteComment`,
+    url: "/deleteComment",
     method: "delete",
     params: { commentId },
   });
@@ -91,7 +93,7 @@ export const getNoticeComment = (
   pageSize: number,
 ) => {
   return request<any>({
-    url: `/web/comment/getNoticeComment/${currentPage}/${pageSize}`,
+    url: `/getNoticeComment/${currentPage}/${pageSize}`,
     method: "get",
   });
 };

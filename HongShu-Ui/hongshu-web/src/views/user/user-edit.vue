@@ -139,7 +139,8 @@
 import { computed, nextTick, onBeforeUnmount, reactive, ref, watch } from "vue";
 import { ElMessage } from "element-plus";
 import { Camera, Upload, Link, Check, Male, Female, Lock, Plus, Location } from "@element-plus/icons-vue";
-import { changePassword, updateUser, uploadAvatarImage } from "@/api/user";
+import { changePassword, updateUser } from "@/api/user";
+import { uploadAvatarImage } from "@/api/oss";
 import { useUserStore } from "@/store/userStore";
 import { normalizeImageUrl, readImageSize, validateLocalImage } from "@/utils/noteImages";
 import CameraAvatar from "@/components/CameraAvatar.vue";

@@ -1,11 +1,6 @@
-import request from "@/utils/request";
+import { createApi } from "@/utils/request";
 
-export const uploadNoteImage = async (file: File): Promise<string> => {
-  const data = new FormData();
-  data.append("uploadFiles", file);
-  const result = await request<any>({ url: "/web/oss/saveBatch", method: "post", data });
-  return result.data?.[0];
-};
+const request = createApi("/web/note");
 
 /**
  * 根据笔记id获取笔记
@@ -14,7 +9,7 @@ export const uploadNoteImage = async (file: File): Promise<string> => {
  */
 export const getNoteById = (noteId: string) => {
   return request<any>({
-    url: "/web/note/getNoteById", // mock接口
+    url: "/getNoteById", // mock接口
     method: "get",
     params: {
       noteId,
@@ -29,7 +24,7 @@ export const getNoteById = (noteId: string) => {
  */
 export const saveNoteByDTO = (data: any) => {
   return request<any>({
-    url: "/web/note/saveNoteByDTO",
+    url: "/saveNoteByDTO",
     method: "post",
     data: data,
   });
@@ -42,7 +37,7 @@ export const saveNoteByDTO = (data: any) => {
  */
 export const updateNoteByDTO = (data: any) => {
   return request<any>({
-    url: "/web/note/updateNoteByDTO",
+    url: "/updateNoteByDTO",
     method: "post",
     data: data,
   });
@@ -55,7 +50,7 @@ export const updateNoteByDTO = (data: any) => {
  */
 export const pinnedNote = (noteId: string) => {
   return request<any>({
-    url: "/web/note/pinnedNote", // mock接口
+    url: "/pinnedNote", // mock接口
     method: "get",
     params: {
       noteId,
@@ -70,7 +65,7 @@ export const pinnedNote = (noteId: string) => {
  */
 export const deleteNoteByIds = (data: any) => {
   return request<any>({
-    url: "/web/note/deleteNoteByIds", // mock接口
+    url: "/deleteNoteByIds", // mock接口
     method: "post",
     data: data,
   });
