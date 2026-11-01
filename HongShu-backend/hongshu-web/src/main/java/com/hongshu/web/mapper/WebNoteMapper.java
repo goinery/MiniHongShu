@@ -16,10 +16,9 @@ public interface WebNoteMapper extends BaseMapper<WebNote> {
      * 原子递增浏览量，不修改笔记内容和编辑时间。
      *
      * @param noteId 笔记 ID
-     * @return 更新行数
      */
     @Update("UPDATE web_note SET view_count = COALESCE(view_count, 0) + 1 WHERE id = #{noteId}")
-    int incrementViewCount(@Param("noteId") String noteId);
+    void incrementViewCount(@Param("noteId") String noteId);
 
     /** 原子调整点赞数，兼容历史空值并避免负数。 */
     @Update("UPDATE web_note SET like_count = GREATEST(0, COALESCE(like_count, 0) + #{delta}) WHERE id = #{noteId}")
