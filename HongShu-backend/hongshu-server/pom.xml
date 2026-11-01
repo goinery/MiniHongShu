@@ -73,4 +73,36 @@
         <finalName>${project.artifactId}</finalName>
     </build>
 
+    <profiles>
+        <profile>
+            <id>docker</id>
+            <build>
+                <!-- 镜像使用公开配置模板，避免将本机连接信息和密钥写进 JAR。 -->
+                <resources>
+                    <resource>
+                        <directory>src/main/resources</directory>
+                        <filtering>false</filtering>
+                        <excludes>
+                            <exclude>application.yml</exclude>
+                            <exclude>application-druid.yml</exclude>
+                            <exclude>application-local.*</exclude>
+                        </excludes>
+                    </resource>
+                </resources>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-jar-plugin</artifactId>
+                        <configuration>
+                            <excludes>
+                                <exclude>application.yml</exclude>
+                                <exclude>application-druid.yml</exclude>
+                                <exclude>application-local.*</exclude>
+                            </excludes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
